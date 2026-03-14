@@ -1,17 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as z from "zod";
 import { eq, and } from "drizzle-orm";
 import { db, productsTable, productVariantsTable } from "@workspace/db";
-
-const CheckoutSessionBody = z.object({
-  items: z.array(z.object({
-    productId: z.string(),
-    variantId: z.string().optional(),
-    quantity: z.number().int().positive(),
-  })).min(1),
-  customerEmail: z.string().email().optional(),
-  shippingAddress: z.record(z.string(), z.string()).optional(),
-});
+import { CheckoutSessionBody } from "@workspace/api-zod";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();

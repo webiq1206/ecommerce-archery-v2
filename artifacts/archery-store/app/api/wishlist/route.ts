@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, sql } from "drizzle-orm";
 import { db, wishlistItemsTable, productsTable, productImagesTable } from "@workspace/db";
-import * as z from "zod";
-
-const AddToWishlistBody = z.object({
-  userId: z.string(),
-  productId: z.string(),
-});
+import { AddToWishlistBody } from "@workspace/api-zod";
 
 export async function GET(request: NextRequest) {
   const userId = request.nextUrl.searchParams.get("userId");

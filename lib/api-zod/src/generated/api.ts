@@ -1397,3 +1397,22 @@ export const GetCustomersReportResponse = zod.object({
     }),
   ),
 });
+
+export const CheckoutSessionBody = zod.object({
+  items: zod
+    .array(
+      zod.object({
+        productId: zod.string(),
+        variantId: zod.string().optional(),
+        quantity: zod.number().int().positive(),
+      }),
+    )
+    .min(1),
+  customerEmail: zod.string().email().optional(),
+  shippingAddress: zod.record(zod.string(), zod.string()).optional(),
+});
+
+export const AddToWishlistBody = zod.object({
+  userId: zod.string(),
+  productId: zod.string(),
+});
