@@ -39,7 +39,7 @@ export function AdminProductsClient({ initialProducts }: { initialProducts: Prod
   return (
     <>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-display font-bold">Products</h1>
+        <h1 className="text-2xl font-display font-normal">Products</h1>
         <button
           onClick={() => setShowAdd(!showAdd)}
           className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm"
@@ -50,7 +50,7 @@ export function AdminProductsClient({ initialProducts }: { initialProducts: Prod
 
       {showAdd && (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-border mb-8">
-          <h3 className="font-bold text-lg mb-6">Add New Product</h3>
+          <h3 className="font-normal text-lg mb-6">Add New Product</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>

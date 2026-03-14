@@ -23,7 +23,7 @@ export default async function AdminDashboard() {
 
   return (
     <>
-      <h1 className="text-2xl font-display font-bold mb-8">Dashboard</h1>
+      <h1 className="text-2xl font-display font-normal mb-8">Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="Total Revenue" value={`$${data.totalRevenue}`} icon={<DollarSign className="w-5 h-5" />} color="bg-primary/10 text-primary" />
         <StatCard title="Total Orders" value={String(data.totalOrders)} icon={<ShoppingCart className="w-5 h-5" />} color="bg-blue-500/10 text-blue-600" />
@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-border p-6 min-h-[300px]">
-        <h3 className="font-bold text-lg mb-6">Revenue Over Time</h3>
+        <h3 className="font-normal text-lg mb-6">Revenue Over Time</h3>
         <div className="flex items-center justify-center h-64 text-muted-foreground border-2 border-dashed rounded-xl">
           Chart integration placeholder
         </div>
@@ -47,7 +47,7 @@ function StatCard({ title, value, icon, color }: { title: string; value: string;
       <div className="flex justify-between items-start mb-4">
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-          <h3 className="text-2xl font-bold font-display">{value}</h3>
+          <h3 className="text-2xl font-normal font-display">{value}</h3>
         </div>
         <div className={`p-3 rounded-xl ${color}`}>{icon}</div>
       </div>

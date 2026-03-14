@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <Link href="/" className="flex items-center gap-2 mb-6">
               <Target className="w-8 h-8 text-primary" />
-              <span className="font-display font-bold text-2xl tracking-[0.25em] uppercase">
+              <span className="font-display font-normal text-2xl tracking-[0.25em] uppercase">
                 APEX<span className="text-primary">ARCHERY</span>
               </span>
             </Link>
@@ -19,7 +19,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-bold text-lg mb-6 tracking-wide text-white">Shop</h4>
+            <h4 className="font-display font-normal text-lg mb-6 tracking-wide text-white">Shop</h4>
             <ul className="space-y-4 text-sm text-white/40">
               <li><Link href="/products?category=compound-bows" className="hover:text-primary transition-colors">Compound Bows</Link></li>
               <li><Link href="/products?category=recurve-bows" className="hover:text-primary transition-colors">Recurve Bows</Link></li>
@@ -29,7 +29,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-bold text-lg mb-6 tracking-wide text-white">Support</h4>
+            <h4 className="font-display font-normal text-lg mb-6 tracking-wide text-white">Support</h4>
             <ul className="space-y-4 text-sm text-white/40">
               <li><Link href="/guides" className="hover:text-primary transition-colors">Buying Guides</Link></li>
               <li><Link href="/faq" className="hover:text-primary transition-colors">FAQ & Shipping</Link></li>
@@ -39,7 +39,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-bold text-lg mb-6 tracking-wide text-white">Join the Pack</h4>
+            <h4 className="font-display font-normal text-lg mb-6 tracking-wide text-white">Join the Pack</h4>
             <p className="text-white/40 text-sm mb-4">
               Subscribe for exclusive drops, hunting tips, and early access to sales.
             </p>

@@ -51,7 +51,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.brand.name}
           </p>
         )}
-        <h3 className="font-display font-semibold text-lg text-white group-hover:text-primary transition-colors line-clamp-1">
+        <h3 className="font-display font-normal text-lg text-white group-hover:text-primary transition-colors line-clamp-1">
           {product.name}
         </h3>
         <div className="flex items-center gap-2">

@@ -100,7 +100,7 @@ export default function CartPage() {
     return (
       <div className="max-w-3xl mx-auto px-4 pt-28 pb-16 text-center">
         <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
-        <h1 className="font-display text-4xl font-bold mb-4">Checkout Initiated</h1>
+        <h1 className="font-display text-4xl font-normal mb-4">Checkout Initiated</h1>
         <p className="text-muted-foreground mb-2">
           {checkoutResult.mode === "stub"
             ? "Stripe is not configured — this is a test checkout."
@@ -119,7 +119,7 @@ export default function CartPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 w-full">
-      <h1 className="font-display text-4xl font-bold mb-10">Your Cart</h1>
+      <h1 className="font-display text-4xl font-normal mb-10">Your Cart</h1>
 
       {cartItems.length === 0 ? (
         <div className="text-center py-20 bg-card border rounded-3xl">
@@ -146,7 +146,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex-1 flex flex-col">
                   <div className="flex justify-between items-start mb-2">
-                    <Link href={`/products/${item.productId}`} className="font-display font-bold text-lg hover:text-primary transition-colors">
+                    <Link href={`/products/${item.productId}`} className="font-display font-normal text-lg hover:text-primary transition-colors">
                       {item.product.name}
                     </Link>
                     <span className="font-bold text-lg">${item.product.price}</span>

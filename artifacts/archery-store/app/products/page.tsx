@@ -108,7 +108,7 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-black/50 to-black/30" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 w-full">
-          <h1 className="font-display text-4xl md:text-6xl font-bold text-white mb-3">
+          <h1 className="font-display text-4xl md:text-6xl font-normal text-white mb-3">
             {currentCategory ? currentCategory.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "The Complete Collection"}
           </h1>
           <p className="text-white/50 max-w-2xl text-lg">
@@ -120,7 +120,7 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full flex flex-col lg:flex-row gap-12">
         <aside className="w-full lg:w-64 shrink-0 space-y-8">
           <div>
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2 text-white">
+            <h3 className="font-normal text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2 text-white">
               <Filter className="w-5 h-5 text-primary" /> Categories
             </h3>
             <ul className="space-y-3">
@@ -162,7 +162,7 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
           {data.products.length === 0 ? (
             <div className="text-center py-20">
               <Search className="w-12 h-12 text-white/20 mx-auto mb-4" />
-              <h3 className="text-xl font-bold mb-2 text-white">No products found</h3>
+              <h3 className="text-xl font-normal mb-2 text-white">No products found</h3>
               <p className="text-white/40 mb-6">Try adjusting your filters or search criteria.</p>
               <Link href="/products" className="text-primary font-bold hover:underline">
                 Clear all filters

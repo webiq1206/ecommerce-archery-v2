@@ -111,7 +111,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           {product.brand && (
             <p className="text-sm font-bold tracking-widest text-secondary-foreground uppercase mb-2">{product.brand.name}</p>
           )}
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 leading-tight">{product.name}</h1>
+          <h1 className="font-display text-4xl md:text-5xl font-normal mb-4 leading-tight">{product.name}</h1>
 
           <div className="flex items-center gap-4 mb-6">
             <span className="text-3xl font-medium">${product.price}</span>
@@ -141,14 +141,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <div className="flex items-start gap-3">
               <Truck className="w-5 h-5 text-primary mt-0.5" />
               <div>
-                <h5 className="text-sm font-bold">Fast Shipping</h5>
+                <h5 className="text-sm font-normal">Fast Shipping</h5>
                 <p className="text-xs text-muted-foreground">Ships within 24 hours</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Shield className="w-5 h-5 text-primary mt-0.5" />
               <div>
-                <h5 className="text-sm font-bold">Authorized Dealer</h5>
+                <h5 className="text-sm font-normal">Authorized Dealer</h5>
                 <p className="text-xs text-muted-foreground">Full factory warranty</p>
               </div>
             </div>
@@ -158,7 +158,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
       {product.specs.length > 0 && (
         <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="font-display text-2xl font-bold mb-6">Specifications</h2>
+          <h2 className="font-display text-2xl font-normal mb-6">Specifications</h2>
           <div className="border rounded-2xl overflow-hidden divide-y">
             {product.specs.map((spec) => (
               <div key={spec.id} className="flex px-6 py-4">
@@ -172,7 +172,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
       {product.description && (
         <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="font-display text-2xl font-bold mb-6">Description</h2>
+          <h2 className="font-display text-2xl font-normal mb-6">Description</h2>
           <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground">
             <p>{product.description}</p>
           </div>
@@ -181,7 +181,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
       {product.reviews.length > 0 && (
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-display text-2xl font-bold mb-2">Customer Reviews</h2>
+          <h2 className="font-display text-2xl font-normal mb-2">Customer Reviews</h2>
           <p className="text-muted-foreground mb-8">
             {product.avgRating} out of 5 stars &middot; {product.reviewCount} {product.reviewCount === 1 ? "review" : "reviews"}
           </p>

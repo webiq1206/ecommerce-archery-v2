@@ -19,7 +19,7 @@ export default async function AdminOrdersPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-display font-bold mb-8">Orders</h1>
+      <h1 className="text-2xl font-display font-normal mb-8">Orders</h1>
       {orders.length === 0 ? (
         <div className="bg-card border border-border rounded-2xl p-12 text-center">
           <p className="text-muted-foreground text-lg">No orders yet</p>

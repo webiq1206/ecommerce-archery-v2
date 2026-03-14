@@ -46,7 +46,7 @@ export function AddToCartButton({ productId, productName, variants, basePrice }:
     <div>
       {variants && variants.length > 0 && (
         <div className="mb-8">
-          <h4 className="font-bold mb-3 flex items-center justify-between">
+          <h4 className="font-normal mb-3 flex items-center justify-between">
             Select Option
             {selectedVariant && <span className="text-primary text-sm">Selected</span>}
           </h4>

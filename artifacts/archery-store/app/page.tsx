@@ -96,7 +96,7 @@ export default async function HomePage() {
             <span className="inline-block py-1.5 px-4 border border-white/20 text-secondary-foreground uppercase tracking-[0.2em] text-xs font-bold mb-8 rounded-full bg-black/30 backdrop-blur-sm">
               Pursue Perfection
             </span>
-            <h1 className="font-display text-5xl sm:text-6xl md:text-8xl font-bold leading-[0.95] mb-8 text-white">
+            <h1 className="font-display text-5xl sm:text-6xl md:text-8xl font-normal leading-[0.95] mb-8 text-white">
               Engineered<br />for the <span className="text-primary">Wild.</span>
             </h1>
             <p className="text-lg md:text-xl text-white/60 mb-12 max-w-xl font-light leading-relaxed">
@@ -150,7 +150,7 @@ export default async function HomePage() {
         <div className="flex justify-between items-end mb-14">
           <div>
             <span className="text-secondary-foreground text-xs font-bold tracking-[0.2em] uppercase mb-4 block">Categories</span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-white">Shop by Category</h2>
+            <h2 className="font-display text-4xl md:text-5xl font-normal text-white">Shop by Category</h2>
           </div>
           <Link href="/products" className="hidden sm:flex items-center gap-2 text-primary font-medium text-sm uppercase tracking-wider hover:text-primary/80 transition-colors">
             View all <ArrowRight className="w-4 h-4" />
@@ -177,7 +177,7 @@ export default async function HomePage() {
           <div className="flex items-center bg-background px-8 md:px-16 lg:px-20 py-20">
             <div className="max-w-lg">
               <span className="text-secondary-foreground text-xs font-bold tracking-[0.2em] uppercase mb-6 block">Our Story</span>
-              <h2 className="font-display text-4xl md:text-5xl font-bold mb-8 leading-tight text-white">
+              <h2 className="font-display text-4xl md:text-5xl font-normal mb-8 leading-tight text-white">
                 Built on absolute <span className="text-primary">accuracy.</span>
               </h2>
               <p className="text-lg text-white/50 mb-6 leading-relaxed">
@@ -199,7 +199,7 @@ export default async function HomePage() {
           <div className="flex justify-between items-end mb-14">
             <div>
               <span className="text-secondary-foreground text-xs font-bold tracking-[0.2em] uppercase mb-4 block">New Arrivals</span>
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-white">Featured Gear</h2>
+              <h2 className="font-display text-4xl md:text-5xl font-normal text-white">Featured Gear</h2>
             </div>
             <Link href="/products" className="hidden sm:flex items-center gap-2 text-primary font-medium text-sm uppercase tracking-wider hover:text-primary/80 transition-colors">
               View all products <ArrowRight className="w-4 h-4" />
