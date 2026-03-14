@@ -7,7 +7,7 @@ import { Trash2, Minus, Plus, ArrowRight } from "lucide-react";
 
 export default function Cart() {
   const sessionId = useSessionStore((s) => s.sessionId);
-  const { data: cartItems, refetch } = useGetCart({ sessionId }, { query: { enabled: !!sessionId } });
+  const { data: cartItems, refetch } = useGetCart(sessionId ? { sessionId } : undefined);
   
   const removeMutation = useRemoveFromCart({
     mutation: { onSuccess: () => refetch() }

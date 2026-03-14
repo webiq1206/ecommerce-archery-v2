@@ -6,7 +6,7 @@ import { useSessionStore } from "@/hooks/use-session";
 export function Navbar() {
   const [location] = useLocation();
   const sessionId = useSessionStore((s) => s.sessionId);
-  const { data: cartItems } = useGetCart({ sessionId }, { query: { enabled: !!sessionId } });
+  const { data: cartItems } = useGetCart(sessionId ? { sessionId } : undefined);
 
   const cartCount = cartItems?.reduce((acc, item) => acc + item.quantity, 0) || 0;
 

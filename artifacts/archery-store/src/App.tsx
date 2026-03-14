@@ -16,6 +16,7 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminCustomers from "./pages/admin/Customers";
 import AdminDistributors from "./pages/admin/Distributors";
 import AdminFulfillment from "./pages/admin/Fulfillment";
+import { AdminGuard } from "./components/admin/AdminGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,12 +48,12 @@ function Router() {
         </div>
       </Route>
 
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/products" component={AdminProducts} />
-      <Route path="/admin/orders" component={AdminOrders} />
-      <Route path="/admin/customers" component={AdminCustomers} />
-      <Route path="/admin/distributors" component={AdminDistributors} />
-      <Route path="/admin/fulfillment" component={AdminFulfillment} />
+      <Route path="/admin">{() => <AdminGuard><AdminDashboard /></AdminGuard>}</Route>
+      <Route path="/admin/products">{() => <AdminGuard><AdminProducts /></AdminGuard>}</Route>
+      <Route path="/admin/orders">{() => <AdminGuard><AdminOrders /></AdminGuard>}</Route>
+      <Route path="/admin/customers">{() => <AdminGuard><AdminCustomers /></AdminGuard>}</Route>
+      <Route path="/admin/distributors">{() => <AdminGuard><AdminDistributors /></AdminGuard>}</Route>
+      <Route path="/admin/fulfillment">{() => <AdminGuard><AdminFulfillment /></AdminGuard>}</Route>
 
       <Route component={NotFound} />
     </Switch>

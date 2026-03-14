@@ -11,9 +11,11 @@ export default function Catalog() {
   const searchParams = new URLSearchParams(window.location.search);
   
   const [category, setCategory] = useState(searchParams.get("category") || "");
-  const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc" | "name_asc">(
-    (searchParams.get("sort") as any) || "newest"
-  );
+  const sortParam = searchParams.get("sort");
+  const validSorts = ["newest", "price_asc", "price_desc", "name_asc"] as const;
+  type SortOption = typeof validSorts[number];
+  const initialSort: SortOption = validSorts.includes(sortParam as SortOption) ? (sortParam as SortOption) : "newest";
+  const [sort, setSort] = useState<SortOption>(initialSort);
 
   const { data: categoryData } = useListCategories({});
   const { data: productData, isLoading } = useListProducts({
@@ -94,7 +96,10 @@ export default function Catalog() {
               <div className="relative">
                 <select 
                   value={sort}
-                  onChange={(e) => setSort(e.target.value as any)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (validSorts.includes(val as SortOption)) setSort(val as SortOption);
+                  }}
                   className="appearance-none bg-muted border-none rounded-md px-4 py-2 pr-10 text-sm font-medium focus:ring-1 focus:ring-primary outline-none cursor-pointer"
                 >
                   <option value="newest">Newest Arrivals</option>

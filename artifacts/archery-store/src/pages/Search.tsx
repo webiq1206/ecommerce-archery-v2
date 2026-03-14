@@ -1,4 +1,4 @@
-import { useLocation, useSearch, Link } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -11,7 +11,7 @@ export default function Search() {
   const q = searchParams.get("q") ?? "";
   const [query, setQuery] = useState(q);
   const [, navigate] = useLocation();
-  const { data, isLoading } = useSearchProducts({ q: q || " ", limit: 24 }, { query: { enabled: !!q } });
+  const { data, isLoading } = useSearchProducts({ q: q || "", limit: 24 });
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
