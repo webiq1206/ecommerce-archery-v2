@@ -99,7 +99,7 @@ export default function CartPage() {
   if (checkoutResult) {
     return (
       <div className="max-w-3xl mx-auto px-4 pt-28 pb-16 text-center">
-        <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
+        <CheckCircle className="w-16 h-16 text-primary mx-auto mb-6" />
         <h1 className="font-display text-4xl font-normal mb-4">Checkout Initiated</h1>
         <p className="text-muted-foreground mb-2">
           {checkoutResult.mode === "stub"

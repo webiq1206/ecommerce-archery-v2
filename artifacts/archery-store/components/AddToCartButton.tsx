@@ -106,7 +106,7 @@ export function AddToCartButton({ productId, productName, variants, basePrice }:
       </div>
 
       {message && (
-        <p className={`text-sm ${message.includes("added") ? "text-green-600" : "text-destructive"}`}>
+        <p className={`text-sm ${message.includes("added") ? "text-primary" : "text-destructive"}`}>
           {message}
         </p>
       )}

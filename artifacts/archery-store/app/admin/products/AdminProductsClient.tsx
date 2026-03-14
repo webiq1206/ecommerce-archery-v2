@@ -111,7 +111,7 @@ export function AdminProductsClient({ initialProducts }: { initialProducts: Prod
                 <td className="px-6 py-4 font-mono text-xs">{product.sku}</td>
                 <td className="px-6 py-4 font-medium">${product.price}</td>
                 <td className="px-6 py-4">
-                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-bold ${product.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-bold ${product.status === "ACTIVE" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-700"}`}>
                     {product.status}
                   </span>
                 </td>
