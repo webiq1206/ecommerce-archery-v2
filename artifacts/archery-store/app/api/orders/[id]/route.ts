@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, ordersTable, orderItemsTable } from "@workspace/db";
+import { UpdateOrderBody } from "@workspace/api-zod";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,9 +18,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const data = await request.json();
+  const raw = await request.json();
+  const parsed = UpdateOrderBody.safeParse(raw);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+
+  const data = parsed.data;
   const [order] = await db.update(ordersTable).set({
-    status: data.status, paymentStatus: data.paymentStatus, fulfillmentStatus: data.fulfillmentStatus,
+    status: data.status as "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED" | "PARTIALLY_REFUNDED" | undefined,
     trackingNumber: data.trackingNumber, trackingUrl: data.trackingUrl, notes: data.notes,
   }).where(eq(ordersTable.id, id)).returning();
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });

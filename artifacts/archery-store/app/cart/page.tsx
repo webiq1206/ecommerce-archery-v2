@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Trash2, Minus, Plus, ArrowRight } from "lucide-react";
+import { Trash2, Minus, Plus, ArrowRight, CheckCircle } from "lucide-react";
 
 interface CartItem {
   id: string;
@@ -29,6 +29,8 @@ function getSessionId(): string {
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutResult, setCheckoutResult] = useState<{ sessionId: string; mode: string } | null>(null);
 
   const fetchCart = useCallback(async () => {
     const sessionId = getSessionId();
@@ -59,12 +61,58 @@ export default function CartPage() {
     fetchCart();
   };
 
+  const handleCheckout = async () => {
+    setCheckingOut(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cartItems.map((item) => ({
+            productId: item.productId,
+            variantId: item.variantId || undefined,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCheckoutResult(data);
+      }
+    } catch {
+      alert("Checkout failed. Please try again.");
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
   const subtotal = cartItems.reduce((acc, item) => acc + parseFloat(item.product.price) * item.quantity, 0);
 
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+      </div>
+    );
+  }
+
+  if (checkoutResult) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+        <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
+        <h1 className="font-display text-4xl font-bold mb-4">Checkout Initiated</h1>
+        <p className="text-muted-foreground mb-2">
+          {checkoutResult.mode === "stub"
+            ? "Stripe is not configured — this is a test checkout."
+            : "Your payment is being processed."}
+        </p>
+        <p className="text-sm text-muted-foreground mb-8">Session ID: {checkoutResult.sessionId}</p>
+        <Link
+          href="/products"
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold"
+        >
+          Continue Shopping <ArrowRight className="w-5 h-5" />
+        </Link>
       </div>
     );
   }
@@ -139,8 +187,14 @@ export default function CartPage() {
                 <span className="font-bold text-lg">Total</span>
                 <span className="font-display font-bold text-3xl text-primary">${subtotal.toFixed(2)}</span>
               </div>
-              <button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5 shadow-lg shadow-black/20">
-                Proceed to Checkout <ArrowRight className="w-5 h-5" />
+              <button
+                onClick={handleCheckout}
+                disabled={checkingOut}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5 shadow-lg shadow-black/20 disabled:opacity-50"
+              >
+                {checkingOut ? "Processing..." : (
+                  <>Proceed to Checkout <ArrowRight className="w-5 h-5" /></>
+                )}
               </button>
             </div>
           </div>

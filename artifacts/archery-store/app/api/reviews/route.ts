@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db, reviewsTable } from "@workspace/db";
+import { CreateReviewBody } from "@workspace/api-zod";
 
 export async function GET(request: NextRequest) {
   const productId = request.nextUrl.searchParams.get("productId");
@@ -14,10 +15,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const data = await request.json();
+  const raw = await request.json();
+  const parsed = CreateReviewBody.safeParse(raw);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+
+  const data = parsed.data;
   const [review] = await db.insert(reviewsTable).values({
     productId: data.productId, rating: data.rating, title: data.title,
-    body: data.body || data.content || "", authorName: data.authorName,
+    body: data.body, authorName: data.authorName,
   }).returning();
   return NextResponse.json({ ...review, createdAt: review.createdAt.toISOString() }, { status: 201 });
 }

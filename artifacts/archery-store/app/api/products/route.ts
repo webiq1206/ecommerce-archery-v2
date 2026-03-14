@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, ilike, sql, desc, asc, gte, lte, type SQL } from "drizzle-orm";
 import { db, productsTable, productImagesTable, brandsTable, reviewsTable, categoriesTable, productCategoriesTable } from "@workspace/db";
+import { CreateProductBody } from "@workspace/api-zod";
 
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
@@ -81,10 +82,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const data = await request.json();
+  const raw = await request.json();
+  const parsed = CreateProductBody.safeParse(raw);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+
+  const data = parsed.data;
   const [product] = await db.insert(productsTable).values({
     name: data.name, slug: data.slug, sku: data.sku, price: data.price,
-    status: data.status || "ACTIVE", shortDescription: data.shortDescription,
+    status: (data.status as "DRAFT" | "ACTIVE" | "ARCHIVED") || "ACTIVE",
+    shortDescription: data.shortDescription,
     description: data.description, compareAtPrice: data.compareAtPrice,
     brandId: data.brandId, distributorId: data.distributorId,
     isFeatured: data.isFeatured, isNewArrival: data.isNewArrival,

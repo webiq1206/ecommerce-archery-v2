@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, sql } from "drizzle-orm";
 import { db, wishlistItemsTable, productsTable, productImagesTable } from "@workspace/db";
+import * as z from "zod";
+
+const AddToWishlistBody = z.object({
+  userId: z.string(),
+  productId: z.string(),
+});
 
 export async function GET(request: NextRequest) {
   const userId = request.nextUrl.searchParams.get("userId");
@@ -31,7 +37,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const data = await request.json();
+  const raw = await request.json();
+  const parsed = AddToWishlistBody.safeParse(raw);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+
+  const data = parsed.data;
   const existing = await db.select().from(wishlistItemsTable).where(and(eq(wishlistItemsTable.userId, data.userId), eq(wishlistItemsTable.productId, data.productId)));
   if (existing.length > 0) return NextResponse.json({ message: "Already in wishlist" });
 

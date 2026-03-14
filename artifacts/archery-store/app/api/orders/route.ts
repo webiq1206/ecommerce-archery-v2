@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, sql, desc, and, type SQL } from "drizzle-orm";
 import { db, ordersTable, orderItemsTable, productsTable, productVariantsTable } from "@workspace/db";
+import { CreateOrderBody } from "@workspace/api-zod";
 
 function generateOrderNumber(): string {
   const prefix = "ORD";
@@ -34,7 +35,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const data = await request.json();
+  const raw = await request.json();
+  const parsed = CreateOrderBody.safeParse(raw);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+
+  const data = parsed.data;
   const { items, customerEmail, customerName, customerPhone, shippingAddress, billingAddress, shippingMethod, discountCode } = data;
 
   let subtotal = 0;
@@ -62,7 +67,8 @@ export async function POST(request: NextRequest) {
 
   const [order] = await db.insert(ordersTable).values({
     orderNumber: generateOrderNumber(), customerEmail, customerName, customerPhone,
-    shippingAddress, billingAddress, shippingMethod, discountCode,
+    shippingAddress: shippingAddress as Record<string, string>, billingAddress: billingAddress as Record<string, string>,
+    shippingMethod, discountCode,
     subtotal: String(subtotal), total: String(subtotal),
   }).returning();
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, sql } from "drizzle-orm";
 import { db, cartItemsTable, productsTable, productImagesTable } from "@workspace/db";
+import { AddToCartBody, UpdateCartItemBody, RemoveFromCartQueryParams } from "@workspace/api-zod";
 
 export async function GET(request: NextRequest) {
   const sessionId = request.nextUrl.searchParams.get("sessionId");
@@ -31,8 +32,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const data = await request.json();
-  const { productId, variantId, quantity = 1, sessionId } = data;
+  const raw = await request.json();
+  const parsed = AddToCartBody.safeParse(raw);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+
+  const { productId, variantId, quantity, sessionId } = parsed.data;
 
   if (sessionId) {
     const existingConditions = [eq(cartItemsTable.sessionId, sessionId), eq(cartItemsTable.productId, productId)];
@@ -49,8 +53,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const data = await request.json();
-  const { itemId, quantity } = data;
+  const raw = await request.json();
+  const parsed = UpdateCartItemBody.safeParse(raw);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+
+  const { itemId, quantity } = parsed.data;
   if (quantity <= 0) {
     await db.delete(cartItemsTable).where(eq(cartItemsTable.id, itemId));
     return new NextResponse(null, { status: 204 });
@@ -62,7 +69,8 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const itemId = request.nextUrl.searchParams.get("itemId");
-  if (!itemId) return NextResponse.json({ error: "itemId required" }, { status: 400 });
-  await db.delete(cartItemsTable).where(eq(cartItemsTable.id, itemId));
+  const parsed = RemoveFromCartQueryParams.safeParse({ itemId });
+  if (!parsed.success) return NextResponse.json({ error: "itemId required" }, { status: 400 });
+  await db.delete(cartItemsTable).where(eq(cartItemsTable.id, parsed.data.itemId));
   return new NextResponse(null, { status: 204 });
 }
