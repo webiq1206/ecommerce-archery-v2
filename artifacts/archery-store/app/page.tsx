@@ -194,6 +194,26 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/catalog-banner.png"
+          alt="Premium archery equipment close-up"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 text-center max-w-2xl px-4">
+          <h2 className="font-display text-4xl md:text-6xl font-normal text-white mb-4">Precision Starts Here</h2>
+          <p className="text-white/60 text-lg mb-8">Shop our complete collection of competition-grade bows, arrows, and accessories.</p>
+          <Link
+            href="/products"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-4 rounded-md font-semibold text-center transition-all hover:-translate-y-0.5 shadow-lg shadow-primary/20 uppercase tracking-wider text-sm inline-block"
+          >
+            Shop Now
+          </Link>
+        </div>
+      </section>
+
       <section className="py-24 md:py-32 bg-[#0D0D0D]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-end mb-14">
