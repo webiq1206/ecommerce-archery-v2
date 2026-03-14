@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Filter, Search, SlidersHorizontal } from "lucide-react";
+import { Search, ChevronRight } from "lucide-react";
 import { db, productsTable, productImagesTable, brandsTable, reviewsTable, categoriesTable, productCategoriesTable, collectionsTable, productCollectionsTable } from "@workspace/db";
 import { eq, and, asc, desc, sql, gte, lte, ilike, type SQL } from "drizzle-orm";
 import { ProductCard } from "@/components/ProductCard";
@@ -16,6 +16,16 @@ interface CatalogProps {
 
 async function getCategories() {
   return db.select({ id: categoriesTable.id, name: categoriesTable.name, slug: categoriesTable.slug }).from(categoriesTable).orderBy(asc(categoriesTable.name));
+}
+
+async function getCategoryDescription(slug: string) {
+  const descriptions: Record<string, string> = {
+    "compound-bows": "Precision-engineered compound bows for competitive and hunting archers. Ultra-high modulus carbon construction delivers unmatched performance at every draw weight.",
+    "recurve-bows": "Traditional craftsmanship meets modern materials. Our recurve selection ranges from Olympic-grade target bows to field-ready hunting recurves.",
+    "arrows": "Carbon fiber arrows and broadheads engineered for penetration and flight consistency. Match-grade components for every discipline.",
+    "apparel": "Technical hunting and archery apparel built with advanced fabrics. Quiet, durable, and designed for all-weather performance.",
+  };
+  return descriptions[slug] || "Explore our curated selection of premium archery equipment, field-tested and approved by competitive archers and hunters.";
 }
 
 async function getProducts(params: { category?: string; brand?: string; sort?: string; search?: string; minPrice?: string; maxPrice?: string; page?: string }) {
@@ -96,113 +106,98 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
   const [categories, data] = await Promise.all([getCategories(), getProducts(params)]);
   const currentCategory = params.category || "";
   const currentSort = params.sort || "newest";
+  const categoryTitle = currentCategory
+    ? currentCategory.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "Shop";
+  const categoryDescription = currentCategory
+    ? await getCategoryDescription(currentCategory)
+    : "Explore our curated selection of premium archery equipment, field-tested and approved by competitive archers and hunters.";
 
   return (
-    <>
-      <div className="relative h-[40vh] min-h-[320px] flex items-end overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/catalog-banner.png"
-          alt="Archery collection"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-black/50 to-black/30" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 w-full">
-          <h1 className="font-display text-4xl md:text-6xl font-normal text-white mb-3">
-            {currentCategory ? currentCategory.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "The Complete Collection"}
-          </h1>
-          <p className="text-white/50 max-w-2xl text-lg">
-            Explore our complete selection of premium archery equipment.
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full flex flex-col lg:flex-row gap-12">
-        <aside className="w-full lg:w-64 shrink-0 space-y-8">
-          <div>
-            <h3 className="font-normal text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2 text-white">
-              <Filter className="w-5 h-5 text-primary" /> Categories
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link
-                  href="/products"
-                  className={`text-sm hover:text-primary transition-colors ${!currentCategory ? "text-primary font-bold" : "text-white/50"}`}
-                >
-                  All Products
-                </Link>
-              </li>
-              {categories.map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`/products?category=${c.slug}`}
-                    className={`text-sm hover:text-primary transition-colors ${currentCategory === c.slug ? "text-primary font-bold" : "text-white/50"}`}
-                  >
-                    {c.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
-
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 pb-4 border-b border-white/10 gap-4">
-            <p className="text-sm text-white/40">
-              Showing {data.products.length} of {data.total} products
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-white/40 flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4" /> Sort by:
-              </span>
-              <SortSelect currentSort={currentSort} currentCategory={currentCategory} />
-            </div>
-          </div>
-
-          {data.products.length === 0 ? (
-            <div className="text-center py-20">
-              <Search className="w-12 h-12 text-white/20 mx-auto mb-4" />
-              <h3 className="text-xl font-normal mb-2 text-white">No products found</h3>
-              <p className="text-white/40 mb-6">Try adjusting your filters or search criteria.</p>
-              <Link href="/products" className="text-primary font-bold hover:underline">
-                Clear all filters
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-              {data.products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+    <div className="pt-28 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className="flex items-center gap-2 text-sm text-white/40 mb-8">
+          <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <Link href="/products" className="hover:text-white transition-colors">Shop</Link>
+          {currentCategory && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5" />
+              <span className="text-foreground">{categoryTitle}</span>
+            </>
           )}
+        </nav>
+
+        <div className="mb-10">
+          <h1 className="font-display text-4xl md:text-5xl font-normal text-white mb-4 normal-case">{categoryTitle}</h1>
+          <p className="text-white/50 max-w-2xl text-base leading-relaxed">{categoryDescription}</p>
         </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-white/10">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/products"
+              className={`px-4 py-2 rounded-md text-sm transition-colors ${!currentCategory ? "bg-primary text-primary-foreground font-medium" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"}`}
+            >
+              All
+            </Link>
+            {categories.map((c) => (
+              <Link
+                key={c.id}
+                href={`/products?category=${c.slug}`}
+                className={`px-4 py-2 rounded-md text-sm transition-colors ${currentCategory === c.slug ? "bg-primary text-primary-foreground font-medium" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"}`}
+              >
+                {c.name}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-white/40">{data.total} products</span>
+            <SortSelect currentSort={currentSort} currentCategory={currentCategory} />
+          </div>
+        </div>
+
+        {data.products.length === 0 ? (
+          <div className="text-center py-20">
+            <Search className="w-12 h-12 text-white/20 mx-auto mb-4" />
+            <h3 className="text-xl font-normal mb-2 text-white">No products found</h3>
+            <p className="text-white/40 mb-6">Try adjusting your filters or search criteria.</p>
+            <Link href="/products" className="text-primary font-bold hover:underline">
+              Clear all filters
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
+            {data.products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 
 function SortSelect({ currentSort, currentCategory }: { currentSort: string; currentCategory: string }) {
   const baseUrl = currentCategory ? `/products?category=${currentCategory}&` : "/products?";
   return (
-    <div className="relative">
-      <div className="flex gap-2 text-sm">
-        {[
-          { value: "newest", label: "Newest" },
-          { value: "price_asc", label: "Price: Low-High" },
-          { value: "price_desc", label: "Price: High-Low" },
-          { value: "name_asc", label: "A-Z" },
-        ].map((opt) => (
-          <Link
-            key={opt.value}
-            href={`${baseUrl}sort=${opt.value}`}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
-              currentSort === opt.value ? "bg-primary text-primary-foreground font-medium" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
-            }`}
-          >
-            {opt.label}
-          </Link>
-        ))}
-      </div>
+    <div className="flex gap-2 text-sm">
+      {[
+        { value: "newest", label: "Newest" },
+        { value: "price_asc", label: "Price: Low-High" },
+        { value: "price_desc", label: "Price: High-Low" },
+        { value: "name_asc", label: "A-Z" },
+      ].map((opt) => (
+        <Link
+          key={opt.value}
+          href={`${baseUrl}sort=${opt.value}`}
+          className={`px-3 py-1.5 rounded-md transition-colors ${
+            currentSort === opt.value ? "bg-primary text-primary-foreground font-medium" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          {opt.label}
+        </Link>
+      ))}
     </div>
   );
 }

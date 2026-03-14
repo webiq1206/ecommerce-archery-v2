@@ -17,19 +17,22 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const imageUrl = product.images?.[0]?.url || "/images/product-bow-1.png";
   const isSale = product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price);
+  const savePercent = isSale
+    ? Math.round((1 - parseFloat(product.price) / parseFloat(product.compareAtPrice!)) * 100)
+    : 0;
 
   return (
     <Link href={`/products/${product.slug}`} className="group block">
       <div className="relative aspect-[3/4] bg-card rounded-xl overflow-hidden mb-4">
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
           {product.isNewArrival && (
-            <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+            <span className="bg-white/90 text-black text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-md">
               New
             </span>
           )}
           {isSale && (
-            <span className="bg-destructive text-destructive-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-              Sale
+            <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-md">
+              Save {savePercent}%
             </span>
           )}
         </div>
@@ -40,7 +43,7 @@ export function ProductCard({ product }: ProductCardProps) {
           className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-500 flex items-center justify-center">
-          <span className="text-white font-medium text-sm uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-500 border border-white/50 px-6 py-3 rounded-lg backdrop-blur-sm">
+          <span className="text-white font-medium text-sm uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-500 border border-white/50 px-6 py-3 rounded-md backdrop-blur-sm">
             View Product
           </span>
         </div>
@@ -51,7 +54,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.brand.name}
           </p>
         )}
-        <h3 className="font-display font-normal text-lg text-white group-hover:text-primary transition-colors line-clamp-1">
+        <h3 className="font-display font-normal text-lg text-white group-hover:text-primary transition-colors line-clamp-1 normal-case">
           {product.name}
         </h3>
         <div className="flex items-center gap-2">

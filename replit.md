@@ -15,7 +15,7 @@ Premium archery e-commerce platform ("Apex Archery") built as a pnpm workspace m
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **Styling**: Tailwind CSS v4 (postcss plugin, no config file)
 - **Icons**: lucide-react
-- **Fonts**: Playfair Display (headings), Inter (body)
+- **Fonts**: Oswald (headings/display), Barlow (body)
 
 ## Structure
 
@@ -76,11 +76,12 @@ artifacts-monorepo/
 ## Design
 
 - **Brand**: Apex Archery — premium outdoor performance
-- **Palette**: Background #0D0D0D, Card #1A1A1A, Muted/Border #2A2A2A, Military olive primary #6B7C3F (HSL 82 33% 37%), White foreground
-- **Style**: Tactical/military dark aesthetic — cinematic AI archery photography, full-bleed imagery, aggressive stencil-stamped headings
-- **Typography**: Oswald (condensed, aggressive) for headings (font-display), Barlow Condensed for body (font-sans) — all headings globally uppercase with widest tracking, font-weight 400 (normal)
+- **Palette**: Background #0D0D0D, Card #1A1A1A, Muted/Border #2A2A2A, Burnt orange primary (HSL 22 85% 52%), White foreground
+- **Style**: Dark editorial aesthetic — cinematic AI archery photography, full-bleed imagery, Hoyt/Quattro-inspired product focus
+- **Typography**: Oswald for headings (font-display), Barlow (non-condensed) for body (font-sans) — headings globally uppercase with wider tracking, font-weight 400 (normal)
 - **Navbar**: Fixed transparent overlay, becomes solid #0D0D0D on scroll (client component with scroll listener)
 - **AI Images**: 10 generated images in `public/images/` — hero.png, cat-*.png (x4 categories), brand-story.png, product-bow-*.png (x3), catalog-banner.png
+- **Catalog page**: Quattro-inspired clean layout — breadcrumb nav, category title + description, horizontal filter chips, product count, 3-column grid. "Save X%" rectangular orange badges, "New" white badges
 - **Layout**: Full-screen hero (100vh), 4-column category grid, split-screen brand story, featured products section
 
 ## Architecture
