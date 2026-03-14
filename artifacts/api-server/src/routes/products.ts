@@ -1,12 +1,10 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ilike, sql, desc, asc, gte, lte } from "drizzle-orm";
+import { eq, and, ilike, sql, desc, asc, gte, lte, type SQL } from "drizzle-orm";
 import { db, productsTable, productImagesTable, productVariantsTable, productSpecsTable, productFaqsTable, productCategoriesTable, productCollectionsTable, categoriesTable, collectionsTable, brandsTable, reviewsTable } from "@workspace/db";
 import {
   ListProductsQueryParams,
   CreateProductBody,
-  GetProductParams,
   UpdateProductBody,
-  DeleteProductParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -22,9 +20,9 @@ router.get("/products", async (req, res): Promise<void> => {
   const limit = query.limit ?? 24;
   const offset = (page - 1) * limit;
 
-  const conditions: any[] = [];
+  const conditions: SQL[] = [];
   if (query.status) {
-    conditions.push(eq(productsTable.status, query.status as any));
+    conditions.push(eq(productsTable.status, query.status as "DRAFT" | "ACTIVE" | "ARCHIVED"));
   } else {
     conditions.push(eq(productsTable.status, "ACTIVE"));
   }
@@ -71,10 +69,11 @@ router.get("/products", async (req, res): Promise<void> => {
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-  let orderBy: any = desc(productsTable.createdAt);
+  let orderBy;
   if (query.sort === "price_asc") orderBy = asc(productsTable.price);
   else if (query.sort === "price_desc") orderBy = desc(productsTable.price);
   else if (query.sort === "name_asc") orderBy = asc(productsTable.name);
+  else orderBy = desc(productsTable.createdAt);
 
   const [products, countResult] = await Promise.all([
     db.select().from(productsTable).where(where).orderBy(orderBy).limit(limit).offset(offset),
@@ -84,12 +83,23 @@ router.get("/products", async (req, res): Promise<void> => {
   const total = countResult[0]?.count ?? 0;
 
   const productIds = products.map(p => p.id);
-  const images = productIds.length > 0 ? await db.select().from(productImagesTable).where(sql`${productImagesTable.productId} IN ${productIds}`).orderBy(asc(productImagesTable.sortOrder)) : [];
-  const brandIds = [...new Set(products.map(p => p.brandId).filter(Boolean))] as string[];
-  const brands = brandIds.length > 0 ? await db.select({ id: brandsTable.id, name: brandsTable.name, slug: brandsTable.slug }).from(brandsTable).where(sql`${brandsTable.id} IN ${brandIds}`) : [];
-  const reviewCounts = productIds.length > 0 ? await db.select({ productId: reviewsTable.productId, count: sql<number>`count(*)::int` }).from(reviewsTable).where(and(sql`${reviewsTable.productId} IN ${productIds}`, eq(reviewsTable.isApproved, true))).groupBy(reviewsTable.productId) : [];
+  const images = productIds.length > 0
+    ? await db.select().from(productImagesTable).where(sql`${productImagesTable.productId} IN ${productIds}`).orderBy(asc(productImagesTable.sortOrder))
+    : [];
+  const brandIds = [...new Set(products.map(p => p.brandId).filter((id): id is string => id !== null))];
+  const brands = brandIds.length > 0
+    ? await db.select({ id: brandsTable.id, name: brandsTable.name, slug: brandsTable.slug }).from(brandsTable).where(sql`${brandsTable.id} IN ${brandIds}`)
+    : [];
+  const reviewCounts = productIds.length > 0
+    ? await db.select({
+        productId: reviewsTable.productId,
+        count: sql<number>`count(*)::int`,
+      }).from(reviewsTable)
+        .where(and(sql`${reviewsTable.productId} IN ${productIds}`, eq(reviewsTable.isApproved, true)))
+        .groupBy(reviewsTable.productId)
+    : [];
 
-  const imageMap = new Map<string, any[]>();
+  const imageMap = new Map<string, Array<{ id: string; url: string; altText: string | null; sortOrder: number }>>();
   for (const img of images) {
     if (!imageMap.has(img.productId)) imageMap.set(img.productId, []);
     imageMap.get(img.productId)!.push({ id: img.id, url: img.url, altText: img.altText, sortOrder: img.sortOrder });
@@ -123,15 +133,36 @@ router.post("/products", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { categoryIds, collectionIds, ...data } = parsed.data as any;
+  const data = parsed.data;
+  const { categoryIds, collectionIds, ...productData } = data;
 
-  const [product] = await db.insert(productsTable).values(data).returning();
+  const [product] = await db.insert(productsTable).values({
+    name: productData.name,
+    slug: productData.slug,
+    sku: productData.sku,
+    price: productData.price,
+    status: productData.status as "DRAFT" | "ACTIVE" | "ARCHIVED" | undefined,
+    shortDescription: productData.shortDescription,
+    description: productData.description,
+    compareAtPrice: productData.compareAtPrice,
+    cost: productData.cost,
+    weight: productData.weight,
+    weightUnit: productData.weightUnit,
+    brandId: productData.brandId,
+    distributorId: productData.distributorId,
+    isFeatured: productData.isFeatured,
+    isNewArrival: productData.isNewArrival,
+  }).returning();
 
   if (categoryIds?.length) {
-    await db.insert(productCategoriesTable).values(categoryIds.map((cid: string, i: number) => ({ productId: product.id, categoryId: cid, isPrimary: i === 0 })));
+    await db.insert(productCategoriesTable).values(
+      categoryIds.map((cid: string, i: number) => ({ productId: product.id, categoryId: cid, isPrimary: i === 0 }))
+    );
   }
   if (collectionIds?.length) {
-    await db.insert(productCollectionsTable).values(collectionIds.map((cid: string) => ({ productId: product.id, collectionId: cid })));
+    await db.insert(productCollectionsTable).values(
+      collectionIds.map((cid: string) => ({ productId: product.id, collectionId: cid }))
+    );
   }
 
   res.status(201).json(product);
@@ -159,7 +190,9 @@ router.get("/products/:id", async (req, res): Promise<void> => {
   ]);
 
   const categoryIds = catLinks.map(c => c.categoryId);
-  const categories = categoryIds.length > 0 ? await db.select({ id: categoriesTable.id, name: categoriesTable.name, slug: categoriesTable.slug }).from(categoriesTable).where(sql`${categoriesTable.id} IN ${categoryIds}`) : [];
+  const categories = categoryIds.length > 0
+    ? await db.select({ id: categoriesTable.id, name: categoriesTable.name, slug: categoriesTable.slug }).from(categoriesTable).where(sql`${categoriesTable.id} IN ${categoryIds}`)
+    : [];
 
   let brand = null;
   if (product.brandId) {
@@ -191,7 +224,23 @@ router.put("/products/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [product] = await db.update(productsTable).set(parsed.data as any).where(eq(productsTable.id, raw)).returning();
+  const data = parsed.data;
+  const [product] = await db.update(productsTable).set({
+    name: data.name,
+    slug: data.slug,
+    status: data.status as "DRAFT" | "ACTIVE" | "ARCHIVED" | undefined,
+    shortDescription: data.shortDescription,
+    description: data.description,
+    price: data.price,
+    compareAtPrice: data.compareAtPrice,
+    cost: data.cost,
+    weight: data.weight,
+    weightUnit: data.weightUnit,
+    brandId: data.brandId,
+    distributorId: data.distributorId,
+    isFeatured: data.isFeatured,
+    isNewArrival: data.isNewArrival,
+  }).where(eq(productsTable.id, raw)).returning();
   if (!product) {
     res.status(404).json({ error: "Product not found" });
     return;

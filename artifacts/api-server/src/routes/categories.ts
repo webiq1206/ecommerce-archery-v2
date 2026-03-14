@@ -1,12 +1,10 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, and, isNull, asc } from "drizzle-orm";
+import { eq, sql, and, isNull, asc, type SQL } from "drizzle-orm";
 import { db, categoriesTable, productCategoriesTable } from "@workspace/db";
 import {
   ListCategoriesQueryParams,
   CreateCategoryBody,
-  GetCategoryParams,
   UpdateCategoryBody,
-  DeleteCategoryParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -18,7 +16,7 @@ router.get("/categories", async (req, res): Promise<void> => {
     return;
   }
   const { parentId, active } = parsed.data;
-  const conditions: any[] = [];
+  const conditions: SQL[] = [];
   if (parentId !== undefined) {
     if (parentId === null || parentId === "null") {
       conditions.push(isNull(categoriesTable.parentId));
@@ -36,7 +34,7 @@ router.get("/categories", async (req, res): Promise<void> => {
   const counts = await db.select({ categoryId: productCategoriesTable.categoryId, count: sql<number>`count(*)::int` }).from(productCategoriesTable).groupBy(productCategoriesTable.categoryId);
   const countMap = new Map(counts.map(c => [c.categoryId, c.count]));
 
-  const childMap = new Map<string, any[]>();
+  const childMap = new Map<string, Array<{ id: string; name: string; slug: string }>>();
   for (const cat of categories) {
     if (cat.parentId) {
       if (!childMap.has(cat.parentId)) childMap.set(cat.parentId, []);
@@ -64,7 +62,19 @@ router.post("/categories", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [category] = await db.insert(categoriesTable).values(parsed.data as any).returning();
+  const data = parsed.data;
+  const [category] = await db.insert(categoriesTable).values({
+    name: data.name,
+    slug: data.slug,
+    description: data.description,
+    imageUrl: data.imageUrl,
+    imageAlt: data.imageAlt,
+    parentId: data.parentId,
+    sortOrder: data.sortOrder,
+    isActive: data.isActive,
+    seoTitle: data.seoTitle,
+    seoDesc: data.seoDesc,
+  }).returning();
   res.status(201).json(category);
 });
 
@@ -85,7 +95,19 @@ router.put("/categories/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [category] = await db.update(categoriesTable).set(parsed.data as any).where(eq(categoriesTable.id, raw)).returning();
+  const data = parsed.data;
+  const [category] = await db.update(categoriesTable).set({
+    name: data.name,
+    slug: data.slug,
+    description: data.description,
+    imageUrl: data.imageUrl,
+    imageAlt: data.imageAlt,
+    parentId: data.parentId,
+    sortOrder: data.sortOrder,
+    isActive: data.isActive,
+    seoTitle: data.seoTitle,
+    seoDesc: data.seoDesc,
+  }).where(eq(categoriesTable.id, raw)).returning();
   if (!category) {
     res.status(404).json({ error: "Category not found" });
     return;

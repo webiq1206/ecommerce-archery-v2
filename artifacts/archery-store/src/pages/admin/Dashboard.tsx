@@ -1,4 +1,4 @@
-import AdminLayout from "./AdminLayout";
+import { AdminLayout } from "./AdminLayout";
 import { useGetRevenueReport, useGetProductsReport } from "@workspace/api-client-react";
 import { DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react";
 

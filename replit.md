@@ -24,12 +24,14 @@ Premium archery e-commerce platform built as a pnpm workspace monorepo using Typ
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
 │   ├── api-server/         # Express API server (port 8080)
-│   │   └── src/routes/     # 16 route files: products, categories, brands, collections,
+│   │   └── src/routes/     # 21 route files: products, categories, brands, collections,
 │   │                       # orders, customers, reviews, discounts, cart, search,
-│   │                       # distributors, fulfillment, content, email, reports, health
+│   │                       # distributors, fulfillment, content, email, reports, health,
+│   │                       # checkout, wishlist, ai, webhooks, analytics
 │   └── archery-store/      # React Vite storefront + admin panel (port 23340, preview: /)
 │       └── src/
-│           ├── pages/         # Home, Catalog, ProductDetail, Cart + admin pages
+│           ├── pages/         # Home, Catalog, ProductDetail, Cart, Search, Account
+│           │   └── admin/     # Dashboard, Products, Orders, Customers, Distributors, Fulfillment
 │           ├── components/    # Navbar, Footer, ProductCard + shadcn/ui components
 │           └── hooks/         # useSessionStore (zustand)
 ├── lib/                    # Shared libraries
@@ -82,17 +84,26 @@ All under `/api`:
 - Categories: CRUD with hierarchical parent/child
 - Brands: CRUD with product counts
 - Collections: CRUD with product counts
-- Orders: CRUD + create from cart items
-- Customers: list + detail with order stats
+- Orders: CRUD + create from cart items (admin-guarded)
+- Customers: list + detail with order stats (admin-guarded)
 - Reviews: CRUD + moderation
-- Discounts: CRUD + validate codes
+- Discounts: CRUD + validate codes (admin-guarded)
 - Cart: CRUD by session ID
-- Search: full-text product search
-- Distributors: CRUD
-- Fulfillment: trigger + logs
+- Search: full-text product search using PostgreSQL tsvector/tsquery + ILIKE fallback
+- Distributors: CRUD (admin-guarded)
+- Fulfillment: trigger + logs (admin-guarded)
 - Content: blog posts CRUD + buying guides CRUD
 - Email: subscribe
-- Reports: revenue, products, customers
+- Reports: revenue, products, customers (admin-guarded)
+- Checkout: Stripe session stub (501)
+- Wishlist: CRUD by userId
+- AI: recommend + chat stubs (501)
+- Webhooks: Stripe + shipping stubs (501)
+- Analytics: overview + traffic (admin-guarded)
+
+## Admin Guard
+
+The `adminGuard` middleware at `artifacts/api-server/src/middleware/adminGuard.ts` checks `x-user-role` header for "ADMIN" or "SUPER_ADMIN". Applied to: orders, customers, discounts, distributors, fulfillment, reports, analytics routes.
 
 ## Important Notes
 
@@ -107,7 +118,7 @@ All under `/api`:
 
 ### `artifacts/api-server` (`@workspace/api-server`)
 
-Express 5 API server with 16 route modules. Uses `@workspace/api-zod` for validation and `@workspace/db` for persistence.
+Express 5 API server with 21 route modules. Uses `@workspace/api-zod` for validation and `@workspace/db` for persistence.
 
 ### `artifacts/archery-store` (`@workspace/archery-store`)
 
@@ -116,7 +127,9 @@ React Vite storefront with:
 - Catalog: sidebar filters, product grid, sorting
 - Product detail: image gallery, variants, specs, reviews, add-to-cart
 - Cart page
-- Admin dashboard, products, and stub admin sections
+- Search results page with full-text search
+- Account placeholder page
+- Admin: dashboard, products, orders, customers, distributors, fulfillment
 - Packages: wouter, zustand, framer-motion, recharts, lucide-react, clsx, tailwind-merge, date-fns
 
 ### `lib/db` (`@workspace/db`)

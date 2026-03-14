@@ -1,12 +1,12 @@
 import { Router, type IRouter } from "express";
-import { sql, gte, lte, and, desc, eq } from "drizzle-orm";
+import { sql, gte, lte, and, desc, eq, type SQL } from "drizzle-orm";
 import { db, ordersTable, orderItemsTable, usersTable, productVariantsTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
 router.get("/reports/revenue", async (req, res): Promise<void> => {
   const { startDate, endDate } = req.query;
-  const conditions: any[] = [];
+  const conditions: SQL[] = [];
   if (startDate) conditions.push(gte(ordersTable.createdAt, new Date(startDate as string)));
   if (endDate) conditions.push(lte(ordersTable.createdAt, new Date(endDate as string)));
   conditions.push(eq(ordersTable.paymentStatus, "PAID"));

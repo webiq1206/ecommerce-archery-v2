@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, ilike, desc, and, or } from "drizzle-orm";
+import { eq, sql, ilike, desc, and, or, type SQL } from "drizzle-orm";
 import { db, usersTable, ordersTable } from "@workspace/db";
 import { ListCustomersQueryParams, GetCustomerParams } from "@workspace/api-zod";
 
@@ -11,9 +11,10 @@ router.get("/customers", async (req, res): Promise<void> => {
   const { page = 1, limit = 20, search } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const conditions: any[] = [eq(usersTable.role, "CUSTOMER")];
+  const conditions: SQL[] = [eq(usersTable.role, "CUSTOMER")];
   if (search) {
-    conditions.push(or(ilike(usersTable.email, `%${search}%`), ilike(usersTable.name, `%${search}%`)));
+    const searchCondition = or(ilike(usersTable.email, `%${search}%`), ilike(usersTable.name, `%${search}%`));
+    if (searchCondition) conditions.push(searchCondition);
   }
   const where = and(...conditions);
 

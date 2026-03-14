@@ -4,13 +4,18 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
-// Pages
 import Home from "./pages/Home";
 import Catalog from "./pages/Catalog";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Search from "./pages/Search";
+import Account from "./pages/Account";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
+import AdminOrders from "./pages/admin/Orders";
+import AdminCustomers from "./pages/admin/Customers";
+import AdminDistributors from "./pages/admin/Distributors";
+import AdminFulfillment from "./pages/admin/Fulfillment";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,13 +29,14 @@ const queryClient = new QueryClient({
 function Router() {
   return (
     <Switch>
-      {/* Storefront */}
       <Route path="/" component={Home} />
       <Route path="/products" component={Catalog} />
       <Route path="/products/:id" component={ProductDetail} />
       <Route path="/cart" component={Cart} />
-      
-      {/* Placeholder Checkout/Guides */}
+      <Route path="/search" component={Search} />
+      <Route path="/account" component={Account} />
+      <Route path="/account/:section" component={Account} />
+
       <Route path="/checkout">
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="text-center bg-white p-8 rounded-2xl shadow-sm border max-w-md w-full">
@@ -41,18 +47,12 @@ function Router() {
         </div>
       </Route>
 
-      {/* Admin */}
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/products" component={AdminProducts} />
-      <Route path="/admin/:path*">
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center bg-white p-8 rounded-2xl shadow-sm border max-w-md w-full">
-            <h1 className="text-2xl font-bold font-display mb-2">Admin Section</h1>
-            <p className="text-muted-foreground">This admin module is pending implementation.</p>
-            <a href="/admin" className="mt-6 inline-block text-primary font-bold hover:underline">Back to Dashboard</a>
-          </div>
-        </div>
-      </Route>
+      <Route path="/admin/orders" component={AdminOrders} />
+      <Route path="/admin/customers" component={AdminCustomers} />
+      <Route path="/admin/distributors" component={AdminDistributors} />
+      <Route path="/admin/fulfillment" component={AdminFulfillment} />
 
       <Route component={NotFound} />
     </Switch>

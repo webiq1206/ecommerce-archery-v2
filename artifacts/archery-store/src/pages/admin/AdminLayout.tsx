@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { Package, ShoppingBag, Users, LayoutDashboard, Target, LogOut, ChevronRight, Truck } from "lucide-react";
+import { Package, ShoppingBag, Users, LayoutDashboard, Target, LogOut, ChevronRight, Truck, Building2 } from "lucide-react";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
   const nav = [
@@ -9,6 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Products", href: "/admin/products", icon: Package },
     { name: "Orders", href: "/admin/orders", icon: ShoppingBag },
     { name: "Customers", href: "/admin/customers", icon: Users },
+    { name: "Distributors", href: "/admin/distributors", icon: Building2 },
     { name: "Fulfillment", href: "/admin/fulfillment", icon: Truck },
   ];
 

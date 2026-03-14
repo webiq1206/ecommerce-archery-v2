@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, desc, and, asc } from "drizzle-orm";
+import { eq, sql, desc, and, type SQL } from "drizzle-orm";
 import { db, ordersTable, orderItemsTable, productsTable, productVariantsTable } from "@workspace/db";
-import { ListOrdersQueryParams, CreateOrderBody, GetOrderParams, UpdateOrderBody } from "@workspace/api-zod";
+import { ListOrdersQueryParams, CreateOrderBody, UpdateOrderBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -14,12 +14,15 @@ function generateOrderNumber(): string {
 
 router.get("/orders", async (req, res): Promise<void> => {
   const parsed = ListOrdersQueryParams.safeParse(req.query);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
   const { page = 1, limit = 20, status, customerId } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const conditions: any[] = [];
-  if (status) conditions.push(eq(ordersTable.status, status as any));
+  const conditions: SQL[] = [];
+  if (status) conditions.push(eq(ordersTable.status, status as "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED" | "PARTIALLY_REFUNDED"));
   if (customerId) conditions.push(eq(ordersTable.userId, customerId));
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -37,15 +40,21 @@ router.get("/orders", async (req, res): Promise<void> => {
 
 router.post("/orders", async (req, res): Promise<void> => {
   const parsed = CreateOrderBody.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const { items, ...orderData } = parsed.data;
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { items, customerEmail, customerName, customerPhone, shippingAddress, billingAddress, shippingMethod, discountCode } = parsed.data;
 
   let subtotal = 0;
   const itemSnapshots = [];
 
   for (const item of items) {
     const [product] = await db.select().from(productsTable).where(eq(productsTable.id, item.productId));
-    if (!product) { res.status(400).json({ error: `Product ${item.productId} not found` }); return; }
+    if (!product) {
+      res.status(400).json({ error: `Product ${item.productId} not found` });
+      return;
+    }
 
     let price = product.price;
     let sku = product.sku;
@@ -53,7 +62,9 @@ router.post("/orders", async (req, res): Promise<void> => {
     let options = null;
 
     if (item.variantId) {
-      const [variant] = await db.select().from(productVariantsTable).where(and(eq(productVariantsTable.id, item.variantId), eq(productVariantsTable.productId, product.id)));
+      const [variant] = await db.select().from(productVariantsTable).where(
+        and(eq(productVariantsTable.id, item.variantId), eq(productVariantsTable.productId, product.id))
+      );
       if (!variant) {
         res.status(400).json({ error: `Variant ${item.variantId} not found for product ${item.productId}` });
         return;
@@ -65,12 +76,26 @@ router.post("/orders", async (req, res): Promise<void> => {
     }
 
     subtotal += Number(price) * item.quantity;
-    itemSnapshots.push({ productId: item.productId, variantId: item.variantId ?? null, name, sku, price, quantity: item.quantity, options });
+    itemSnapshots.push({
+      productId: item.productId,
+      variantId: item.variantId ?? null,
+      name,
+      sku,
+      price,
+      quantity: item.quantity,
+      options,
+    });
   }
 
   const [order] = await db.insert(ordersTable).values({
-    ...orderData as any,
     orderNumber: generateOrderNumber(),
+    customerEmail,
+    customerName,
+    customerPhone,
+    shippingAddress,
+    billingAddress,
+    shippingMethod,
+    discountCode,
     subtotal: String(subtotal),
     total: String(subtotal),
   }).returning();
@@ -83,7 +108,10 @@ router.post("/orders", async (req, res): Promise<void> => {
 router.get("/orders/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, raw));
-  if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
 
   const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
 
@@ -98,9 +126,23 @@ router.get("/orders/:id", async (req, res): Promise<void> => {
 router.put("/orders/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const parsed = UpdateOrderBody.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const [order] = await db.update(ordersTable).set(parsed.data as any).where(eq(ordersTable.id, raw)).returning();
-  if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const data = parsed.data;
+  const [order] = await db.update(ordersTable).set({
+    status: data.status as "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED" | "PARTIALLY_REFUNDED" | undefined,
+    paymentStatus: data.paymentStatus as "UNPAID" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "FAILED" | undefined,
+    fulfillmentStatus: data.fulfillmentStatus as "PENDING" | "EMAIL_SENT" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "FAILED" | undefined,
+    trackingNumber: data.trackingNumber,
+    trackingUrl: data.trackingUrl,
+    notes: data.notes,
+  }).where(eq(ordersTable.id, raw)).returning();
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
   res.json({ ...order, createdAt: order.createdAt.toISOString() });
 });
 

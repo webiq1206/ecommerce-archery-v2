@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AdminLayout from "./AdminLayout";
+import { AdminLayout } from "./AdminLayout";
 import { useListProducts, useCreateProduct } from "@workspace/api-client-react";
 import { Plus, Search, Edit2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +24,7 @@ export default function AdminProducts() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate({ data: formData as any });
+    createMutation.mutate({ data: { ...formData } });
   };
 
   return (

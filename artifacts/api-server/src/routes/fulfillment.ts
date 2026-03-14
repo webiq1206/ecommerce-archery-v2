@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, desc, and } from "drizzle-orm";
+import { eq, sql, desc, and, type SQL } from "drizzle-orm";
 import { db, ordersTable, orderItemsTable, productsTable, distributorsTable, fulfillmentLogsTable } from "@workspace/db";
 import { TriggerFulfillmentBody, ListFulfillmentLogsQueryParams } from "@workspace/api-zod";
 
@@ -17,8 +17,10 @@ router.post("/fulfillment", async (req, res): Promise<void> => {
   const products = productIds.length > 0 ? await db.select().from(productsTable).where(sql`${productsTable.id} IN ${productIds}`) : [];
   const productMap = new Map(products.map(p => [p.id, p]));
 
-  const distributorMap = new Map<string, { distributor: any; items: any[] }>();
-  const unassignedItems: any[] = [];
+  type OrderItem = typeof items[number];
+  type ProductRow = typeof products[number];
+  const distributorMap = new Map<string, { distributor: { id: string; email: string; ccEmails: string[] | null }; items: OrderItem[] }>();
+  const unassignedItems: OrderItem[] = [];
 
   for (const item of items) {
     const product = productMap.get(item.productId);
@@ -54,7 +56,7 @@ router.get("/fulfillment/logs", async (req, res): Promise<void> => {
   const { orderId, distributorId, page = 1, limit = 20 } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const conditions: any[] = [];
+  const conditions: SQL[] = [];
   if (orderId) conditions.push(eq(fulfillmentLogsTable.orderId, orderId));
   if (distributorId) conditions.push(eq(fulfillmentLogsTable.distributorId, distributorId));
   const where = conditions.length > 0 ? and(...conditions) : undefined;
