@@ -17,8 +17,7 @@ router.get("/search", async (req, res): Promise<void> => {
   const conditions = [
     eq(productsTable.status, "ACTIVE"),
     sql`(
-      to_tsvector('english', coalesce(${productsTable.name}, '') || ' ' || coalesce(${productsTable.shortDescription}, '') || ' ' || coalesce(${productsTable.sku}, ''))
-      @@ websearch_to_tsquery('english', ${q})
+      ${productsTable.searchVector} @@ websearch_to_tsquery('english', ${q})
       OR ${productsTable.name} ILIKE ${'%' + q + '%'}
     )`,
   ];
@@ -33,7 +32,7 @@ router.get("/search", async (req, res): Promise<void> => {
   const where = and(...conditions);
 
   const rankExpr = sql`ts_rank(
-    to_tsvector('english', coalesce(${productsTable.name}, '') || ' ' || coalesce(${productsTable.shortDescription}, '')),
+    ${productsTable.searchVector},
     websearch_to_tsquery('english', ${q})
   )`;
 

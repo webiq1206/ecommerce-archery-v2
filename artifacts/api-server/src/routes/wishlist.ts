@@ -1,17 +1,27 @@
 import { Router, type IRouter } from "express";
 import { eq, and, sql } from "drizzle-orm";
 import { db, wishlistItemsTable, productsTable, productImagesTable } from "@workspace/db";
+import * as z from "zod";
+
+const GetWishlistQueryParams = z.object({
+  userId: z.string().min(1),
+});
+
+const AddToWishlistBody = z.object({
+  userId: z.string().min(1),
+  productId: z.string().min(1),
+});
 
 const router: IRouter = Router();
 
 router.get("/wishlist", async (req, res): Promise<void> => {
-  const userId = req.query.userId as string | undefined;
-  if (!userId) {
-    res.status(400).json({ error: "userId is required" });
+  const parsed = GetWishlistQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
     return;
   }
 
-  const items = await db.select().from(wishlistItemsTable).where(eq(wishlistItemsTable.userId, userId));
+  const items = await db.select().from(wishlistItemsTable).where(eq(wishlistItemsTable.userId, parsed.data.userId));
   const productIds = items.map(i => i.productId);
   if (productIds.length === 0) {
     res.json([]);
@@ -44,11 +54,12 @@ router.get("/wishlist", async (req, res): Promise<void> => {
 });
 
 router.post("/wishlist", async (req, res): Promise<void> => {
-  const { userId, productId } = req.body;
-  if (!userId || !productId) {
-    res.status(400).json({ error: "userId and productId are required" });
+  const parsed = AddToWishlistBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const { userId, productId } = parsed.data;
 
   const existing = await db.select().from(wishlistItemsTable).where(
     and(eq(wishlistItemsTable.userId, userId), eq(wishlistItemsTable.productId, productId))

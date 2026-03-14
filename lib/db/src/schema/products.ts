@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, boolean, numeric, json, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, boolean, numeric, json, primaryKey, index, customType } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { productStatusEnum } from "./enums";
@@ -35,7 +35,9 @@ export const productsTable = pgTable("products", {
   isFeatured: boolean("is_featured").notNull().default(false),
   isNewArrival: boolean("is_new_arrival").notNull().default(false),
   sortOrder: integer("sort_order").notNull().default(0),
-  searchVector: text("search_vector"),
+  searchVector: customType<{ data: string; driverParam: string }>({
+    dataType() { return "tsvector"; },
+  })("search_vector"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
