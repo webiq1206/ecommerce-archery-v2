@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Target, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export function Footer() {
   return (
@@ -7,8 +7,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div>
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <Target className="w-8 h-8 text-primary" />
+            <Link href="/" className="flex items-center mb-6">
               <span className="font-display font-normal text-2xl tracking-[0.25em] uppercase">
                 APEX<span className="text-primary">ARCHERY</span>
               </span>

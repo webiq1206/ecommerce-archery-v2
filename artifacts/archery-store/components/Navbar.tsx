@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingCart, Search, User, Target } from "lucide-react";
+import { ShoppingCart, Search, User } from "lucide-react";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -32,8 +32,7 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <Target className="w-8 h-8 text-primary group-hover:rotate-12 transition-transform duration-300" />
+        <Link href="/" className="flex items-center group">
           <span className="font-display font-normal text-2xl tracking-[0.25em] uppercase text-white">
             APEX<span className="text-primary">ARCHERY</span>
           </span>

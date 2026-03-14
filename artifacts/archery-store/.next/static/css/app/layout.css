@@ -2080,13 +2080,6 @@
       }
     }
   }
-  .group-hover\:rotate-12 {
-    &:is(:where(.group):hover *) {
-      @media (hover: hover) {
-        rotate: 12deg;
-      }
-    }
-  }
   .group-hover\:bg-black\/40 {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
