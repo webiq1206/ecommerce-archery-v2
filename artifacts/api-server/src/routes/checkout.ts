@@ -1,14 +1,26 @@
 import { Router, type IRouter } from "express";
+import * as z from "zod";
+
+const CheckoutSessionBody = z.object({
+  items: z.array(z.object({
+    productId: z.string(),
+    variantId: z.string().optional(),
+    price: z.number(),
+    quantity: z.number().int().positive(),
+  })).min(1),
+  customerEmail: z.string().email().optional(),
+  shippingAddress: z.record(z.string(), z.string()).optional(),
+});
 
 const router: IRouter = Router();
 
 router.post("/checkout/session", async (req, res): Promise<void> => {
-  const { items, customerEmail, shippingAddress } = req.body;
-
-  if (!items?.length) {
-    res.status(400).json({ error: "Cart items are required" });
+  const parsed = CheckoutSessionBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const { items, customerEmail, shippingAddress } = parsed.data;
 
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeKey) {
