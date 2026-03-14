@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Archery Store"
+version = "1.0.0"
+id = "artifacts/archery-store"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 23340
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/archery-store run dev"
+
+[services.env]
+PORT = "23340"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/archery-store", "run", "build"]
+publicDir = "artifacts/archery-store/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
