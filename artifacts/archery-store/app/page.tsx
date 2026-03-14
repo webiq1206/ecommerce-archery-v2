@@ -93,7 +93,7 @@ export default async function HomePage() {
         </div>
         <div className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pb-32">
           <div className="max-w-3xl">
-            <span className="inline-block py-1.5 px-4 border border-primary/40 text-primary uppercase tracking-[0.2em] text-xs font-bold mb-8 rounded-full bg-black/30 backdrop-blur-sm">
+            <span className="inline-block py-1.5 px-4 border border-white/20 text-secondary-foreground uppercase tracking-[0.2em] text-xs font-bold mb-8 rounded-full bg-black/30 backdrop-blur-sm">
               Pursue Perfection
             </span>
             <h1 className="font-display text-5xl sm:text-6xl md:text-8xl font-bold leading-[0.95] mb-8 text-white">
@@ -149,7 +149,7 @@ export default async function HomePage() {
       <section className="py-24 md:py-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-end mb-14">
           <div>
-            <span className="text-primary text-xs font-bold tracking-[0.2em] uppercase mb-4 block">Categories</span>
+            <span className="text-secondary-foreground text-xs font-bold tracking-[0.2em] uppercase mb-4 block">Categories</span>
             <h2 className="font-display text-4xl md:text-5xl font-bold text-white">Shop by Category</h2>
           </div>
           <Link href="/products" className="hidden sm:flex items-center gap-2 text-primary font-medium text-sm uppercase tracking-wider hover:text-primary/80 transition-colors">
@@ -176,7 +176,7 @@ export default async function HomePage() {
           </div>
           <div className="flex items-center bg-background px-8 md:px-16 lg:px-20 py-20">
             <div className="max-w-lg">
-              <span className="text-primary text-xs font-bold tracking-[0.2em] uppercase mb-6 block">Our Story</span>
+              <span className="text-secondary-foreground text-xs font-bold tracking-[0.2em] uppercase mb-6 block">Our Story</span>
               <h2 className="font-display text-4xl md:text-5xl font-bold mb-8 leading-tight text-white">
                 Built on absolute <span className="text-primary">accuracy.</span>
               </h2>
@@ -198,7 +198,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-end mb-14">
             <div>
-              <span className="text-primary text-xs font-bold tracking-[0.2em] uppercase mb-4 block">New Arrivals</span>
+              <span className="text-secondary-foreground text-xs font-bold tracking-[0.2em] uppercase mb-4 block">New Arrivals</span>
               <h2 className="font-display text-4xl md:text-5xl font-bold text-white">Featured Gear</h2>
             </div>
             <Link href="/products" className="hidden sm:flex items-center gap-2 text-primary font-medium text-sm uppercase tracking-wider hover:text-primary/80 transition-colors">

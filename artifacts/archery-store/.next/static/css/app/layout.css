@@ -1339,12 +1339,6 @@
   .border-primary {
     border-color: hsl(var(--primary));
   }
-  .border-primary\/40 {
-    border-color: hsl(var(--primary));
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, hsl(var(--primary)) 40%, transparent);
-    }
-  }
   .border-secondary-foreground\/10 {
     border-color: hsl(var(--secondary-foreground));
     @supports (color: color-mix(in lab, red, red)) {
