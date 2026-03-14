@@ -2,7 +2,7 @@
 
 ## Overview
 
-Premium archery e-commerce platform built as a pnpm workspace monorepo using TypeScript. Full-stack with Express 5 API, PostgreSQL/Drizzle ORM, React Vite storefront, and admin panel.
+Premium archery e-commerce platform ("Apex Archery") built as a pnpm workspace monorepo using TypeScript. Full-stack Next.js 15 App Router application with Server Components for SSR/SEO, PostgreSQL/Drizzle ORM, and admin panel.
 
 ## Stack
 
@@ -10,42 +10,66 @@ Premium archery e-commerce platform built as a pnpm workspace monorepo using Typ
 - **Node.js version**: 24
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
-- **API framework**: Express 5
+- **Framework**: Next.js 15 (App Router with Server Components)
 - **Database**: PostgreSQL + Drizzle ORM
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Frontend**: React + Vite + TailwindCSS + shadcn/ui
-- **Routing**: wouter
-- **Build**: esbuild (CJS bundle for API), Vite (for frontend)
+- **Styling**: Tailwind CSS v4 (postcss plugin, no config file)
+- **Icons**: lucide-react
+- **Fonts**: Playfair Display (headings), Inter (body)
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   ├── api-server/         # Express API server (port 8080)
-│   │   └── src/routes/     # 21 route files: products, categories, brands, collections,
-│   │                       # orders, customers, reviews, discounts, cart, search,
-│   │                       # distributors, fulfillment, content, email, reports, health,
-│   │                       # checkout, wishlist, ai, webhooks, analytics
-│   └── archery-store/      # React Vite storefront + admin panel (port 23340, preview: /)
-│       └── src/
-│           ├── pages/         # Home, Catalog, ProductDetail, Cart, Search, Account
-│           │   └── admin/     # Dashboard, Products, Orders, Customers, Distributors, Fulfillment
-│           ├── components/    # Navbar, Footer, ProductCard + shadcn/ui components
-│           └── hooks/         # useSessionStore (zustand)
-├── lib/                    # Shared libraries
-│   ├── api-spec/           # OpenAPI spec (40+ endpoints) + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
-│   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema (16 schema files) + DB connection
-│       └── src/schema/     # enums, users, categories, brands, collections, distributors,
-│                           # products, orders, cart, wishlist, addresses, reviews,
-│                           # discounts, content, email-subscribers, store-settings
-├── scripts/                # Utility scripts
+├── artifacts/
+│   └── archery-store/      # Next.js 15 App Router (port 23340, preview: /)
+│       ├── app/
+│       │   ├── page.tsx           # Homepage (SSR, featured products)
+│       │   ├── layout.tsx         # Root layout with Navbar + Footer
+│       │   ├── products/
+│       │   │   ├── page.tsx       # Catalog (SSR, filters, sort)
+│       │   │   └── [slug]/page.tsx # Product detail (SSR, generateMetadata)
+│       │   ├── search/page.tsx    # Full-text search (SSR, tsvector)
+│       │   ├── cart/page.tsx      # Cart (client component)
+│       │   ├── account/page.tsx   # Account placeholder
+│       │   ├── admin/
+│       │   │   ├── layout.tsx     # Admin sidebar layout
+│       │   │   ├── page.tsx       # Dashboard with stats
+│       │   │   ├── products/      # Products CRUD
+│       │   │   ├── orders/        # Orders list
+│       │   │   ├── customers/     # Customer aggregation
+│       │   │   ├── distributors/  # Distributor cards
+│       │   │   └── fulfillment/   # Fulfillment logs
+│       │   └── api/               # Next.js Route Handlers
+│       │       ├── health/        # Health check
+│       │       ├── products/      # Products CRUD + [id]
+│       │       ├── categories/    # Categories list
+│       │       ├── brands/        # Brands list
+│       │       ├── cart/          # Cart CRUD (session-based)
+│       │       ├── orders/        # Orders CRUD + [id]
+│       │       ├── checkout/      # Stripe payment intent (stub if no key)
+│       │       ├── search/        # Full-text search API
+│       │       ├── reviews/       # Reviews CRUD
+│       │       └── wishlist/      # Wishlist CRUD
+│       ├── components/            # Navbar, Footer, ProductCard, AddToCartButton, SearchForm
+│       ├── lib/utils.ts           # cn(), formatPrice()
+│       ├── middleware.ts          # Admin route guard (stub)
+│       ├── next.config.ts
+│       ├── postcss.config.mjs
+│       └── tsconfig.json
+├── lib/
+│   ├── db/                 # Drizzle ORM schema (16 schema files) + DB connection
+│   │   └── src/schema/     # enums, users, categories, brands, collections, distributors,
+│   │                       # products, orders, cart, wishlist, addresses, reviews,
+│   │                       # discounts, content, email-subscribers, store-settings
+│   ├── api-spec/           # OpenAPI spec (legacy, from Express era)
+│   ├── api-client-react/   # Generated React Query hooks (legacy)
+│   └── api-zod/            # Generated Zod schemas
+├── scripts/
+│   ├── seed.ts             # Database seed script
+│   └── post-merge.sh       # Post-merge setup
 ├── pnpm-workspace.yaml
 ├── tsconfig.base.json
-├── tsconfig.json
 └── package.json
 ```
 
@@ -54,19 +78,21 @@ artifacts-monorepo/
 - **Brand**: Apex Archery — premium outdoor performance
 - **Palette**: Charcoal #1A1A1A, Amber-gold #C8922A, Forest green #2C4A2E, Warm surface #F7F6F4
 - **Style**: Deep forest meets precision-engineered performance (think Sitka Gear meets REI)
+- **Typography**: Playfair Display for headings (font-display), Inter for body (font-sans)
+
+## Architecture
+
+- **Server Components**: All product pages, catalog, search, and admin pages are server-rendered
+- **Client Components**: Cart page, AddToCartButton, SearchForm, AdminProductsClient (marked with "use client")
+- **Route Handlers**: Next.js Route Handlers at `/api/*` replace the old Express API
+- **Database access**: Server Components import directly from `@workspace/db` (no HTTP layer for SSR)
+- **Cart sessions**: localStorage `apex_session_id` for anonymous cart tracking
 
 ## TypeScript & Composite Projects
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references.
 
-- **Always typecheck from the root** — run `pnpm run typecheck`
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array
-
-## Root Scripts
-
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly`
+- **Typecheck archery-store**: `pnpm --filter @workspace/archery-store run typecheck`
 
 ## Database Schema
 
@@ -76,78 +102,45 @@ Enums: UserRole, ProductStatus, FulfillmentStatus, OrderStatus, PaymentStatus, D
 
 - Push schema: `pnpm --filter @workspace/db run push`
 - Force push: `pnpm --filter @workspace/db run push-force`
+- Seed: `npx tsx scripts/seed.ts`
 
-## API Endpoints (40+)
+## API Endpoints (Route Handlers)
 
 All under `/api`:
 - Products: CRUD + list with filters (category, brand, price, search, sort, featured)
-- Categories: CRUD with hierarchical parent/child
-- Brands: CRUD with product counts
-- Collections: CRUD with product counts
-- Orders: CRUD + create from cart items (admin-guarded)
-- Customers: list + detail with order stats (admin-guarded)
-- Reviews: CRUD + moderation
-- Discounts: CRUD + validate codes (admin-guarded)
+- Categories: list
+- Brands: list
 - Cart: CRUD by session ID
+- Orders: CRUD + create from cart items
+- Checkout: Stripe payment intent (stub mode if no STRIPE_SECRET_KEY)
 - Search: full-text product search using PostgreSQL tsvector/tsquery + ILIKE fallback
-- Distributors: CRUD (admin-guarded)
-- Fulfillment: trigger + logs (admin-guarded)
-- Content: blog posts CRUD + buying guides CRUD
-- Email: subscribe
-- Reports: revenue, products, customers (admin-guarded)
-- Checkout: Stripe session stub (501)
+- Reviews: list by product + create
 - Wishlist: CRUD by userId
-- AI: recommend + chat stubs (501)
-- Webhooks: Stripe + shipping stubs (501)
-- Analytics: overview + traffic (admin-guarded)
 
-## Admin Guard
+## Admin
 
-The `adminGuard` middleware at `artifacts/api-server/src/middleware/adminGuard.ts` checks `x-user-role` header for "ADMIN" or "SUPER_ADMIN". Applied to: orders, customers, discounts, distributors, fulfillment, reports, analytics routes.
+Admin pages at `/admin` with sidebar navigation. Middleware stub at `middleware.ts` checks `x-user-role` header (placeholder for auth).
+
+Pages: Dashboard (revenue/orders/avg value/low stock), Products (table + add form), Orders, Customers, Distributors, Fulfillment logs.
 
 ## Important Notes
 
-- Express 5: async handlers need `Promise<void>`, use `res.status().json(); return;` pattern
-- Routes must NOT include `/api` prefix (app.ts mounts router at `/api`)
-- Array columns: use `.array()` method — `text("tags").array()`
-- OpenAPI spec title forced to "Api" by orval config
-- Codegen: `pnpm --filter @workspace/api-spec run codegen`
-- Seed script: `npx tsx artifacts/api-server/src/seed.ts`
+- Next.js 15 with App Router: async params (e.g., `params: Promise<{ slug: string }>`)
+- Tailwind v4: uses `@import "tailwindcss"` + `@tailwindcss/postcss` plugin (no tailwind.config.js)
+- Images use `<img>` tags with `{/* eslint-disable-next-line @next/next/no-img-element */}`
+- `serverExternalPackages: ["pg"]` in next.config.ts for PostgreSQL compatibility
+- Product routes use slug: `/products/[slug]`
 
 ## Packages
 
-### `artifacts/api-server` (`@workspace/api-server`)
-
-Express 5 API server with 21 route modules. Uses `@workspace/api-zod` for validation and `@workspace/db` for persistence.
-
 ### `artifacts/archery-store` (`@workspace/archery-store`)
 
-React Vite storefront with:
-- Homepage: hero, trust bar, categories, featured products, brand story
-- Catalog: sidebar filters, product grid, sorting
-- Product detail: image gallery, variants, specs, reviews, add-to-cart
-- Cart page
-- Search results page with full-text search
-- Account placeholder page
-- Admin: dashboard, products, orders, customers, distributors, fulfillment
-- Packages: wouter, zustand, framer-motion, recharts, lucide-react, clsx, tailwind-merge, date-fns
+Next.js 15 App Router storefront + admin panel. Server-rendered product pages for SEO. Route handlers for API.
 
 ### `lib/db` (`@workspace/db`)
 
 Database layer with 16 Drizzle schema files covering all e-commerce entities.
 
-### `lib/api-spec` (`@workspace/api-spec`)
-
-OpenAPI 3.1 spec with 40+ endpoints. Codegen: `pnpm --filter @workspace/api-spec run codegen`
-
 ### `lib/api-zod` (`@workspace/api-zod`)
 
 Generated Zod schemas from the OpenAPI spec.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client.
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts. Run via `pnpm --filter @workspace/scripts run <script>`.
