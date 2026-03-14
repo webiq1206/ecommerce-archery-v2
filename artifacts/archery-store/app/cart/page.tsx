@@ -90,7 +90,7 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-7xl mx-auto px-4 pt-28 pb-16 text-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
       </div>
     );
@@ -98,7 +98,7 @@ export default function CartPage() {
 
   if (checkoutResult) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-3xl mx-auto px-4 pt-28 pb-16 text-center">
         <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
         <h1 className="font-display text-4xl font-bold mb-4">Checkout Initiated</h1>
         <p className="text-muted-foreground mb-2">
@@ -118,7 +118,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 w-full">
       <h1 className="font-display text-4xl font-bold mb-10">Your Cart</h1>
 
       {cartItems.length === 0 ? (
@@ -139,7 +139,7 @@ export default function CartPage() {
                 <div className="w-24 h-32 bg-muted rounded-xl overflow-hidden shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.product.imageUrl || "https://placehold.co/200x200/1A1A1A/C8922A?text=Product"}
+                    src={item.product.imageUrl || "/images/product-bow-1.png"}
                     alt={item.product.name}
                     className="w-full h-full object-cover"
                   />

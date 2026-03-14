@@ -76,11 +76,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   const images = product.images.length > 0
     ? product.images.map((i) => i.url)
-    : ["https://placehold.co/800x1000/1A1A1A/C8922A?text=Product"];
+    : ["/images/product-bow-1.png"];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-sm text-muted-foreground mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12">
+      <div className="text-sm text-white/40 mb-8">
         Home / {product.categories?.[0]?.name || "Products"} / <span className="text-foreground">{product.name}</span>
       </div>
 

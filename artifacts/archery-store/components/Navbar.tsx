@@ -1,20 +1,40 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ShoppingCart, Search, User, Target } from "lucide-react";
 
 export function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 60);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const navLinks = [
     { name: "Shop", href: "/products" },
-    { name: "Bows", href: "/products?category=bows" },
+    { name: "Bows", href: "/products?category=compound-bows" },
     { name: "Apparel", href: "/products?category=apparel" },
     { name: "Guides", href: "/guides" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? "bg-[#0D0D0D]/95 backdrop-blur-md border-b border-white/5 shadow-lg shadow-black/30"
+          : "bg-transparent"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <Target className="w-8 h-8 text-primary group-hover:rotate-12 transition-transform duration-300" />
-          <span className="font-display font-bold text-2xl tracking-wide uppercase">
+          <span className="font-display font-bold text-2xl tracking-wide uppercase text-white">
             APEX<span className="text-primary">ARCHERY</span>
           </span>
         </Link>
@@ -24,7 +44,7 @@ export function Navbar() {
             <Link
               key={link.name}
               href={link.href}
-              className="text-sm font-medium tracking-wider uppercase transition-colors hover:text-primary text-muted-foreground"
+              className="text-sm font-medium tracking-wider uppercase transition-colors hover:text-primary text-white/70 hover:text-white"
             >
               {link.name}
             </Link>
@@ -32,13 +52,13 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link href="/search" className="p-2 text-muted-foreground hover:text-primary transition-colors">
+          <Link href="/search" className="p-2 text-white/70 hover:text-primary transition-colors" aria-label="Search products">
             <Search className="w-5 h-5" />
           </Link>
-          <Link href="/admin" className="p-2 text-muted-foreground hover:text-primary transition-colors">
+          <Link href="/admin" className="p-2 text-white/70 hover:text-primary transition-colors" aria-label="Account">
             <User className="w-5 h-5" />
           </Link>
-          <Link href="/cart" className="p-2 text-muted-foreground hover:text-primary transition-colors relative">
+          <Link href="/cart" className="p-2 text-white/70 hover:text-primary transition-colors relative" aria-label="Shopping cart">
             <ShoppingCart className="w-5 h-5" />
           </Link>
         </div>

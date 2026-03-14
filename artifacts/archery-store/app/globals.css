@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,700&display=swap');
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
@@ -43,24 +43,24 @@
 }
 
 :root {
-  --background: 40 20% 96%;
-  --foreground: 0 0% 10%;
+  --background: 0 0% 5%;
+  --foreground: 0 0% 95%;
   --primary: 40 65% 47%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 124 25% 23%;
-  --secondary-foreground: 0 0% 100%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 10%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 10%;
-  --muted: 40 10% 90%;
-  --muted-foreground: 0 0% 40%;
+  --secondary: 140 20% 12%;
+  --secondary-foreground: 0 0% 95%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 95%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 95%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 55%;
   --accent: 40 65% 47%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 88%;
-  --input: 0 0% 88%;
+  --border: 0 0% 18%;
+  --input: 0 0% 18%;
   --ring: 40 65% 47%;
 }
 

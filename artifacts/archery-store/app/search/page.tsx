@@ -71,9 +71,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <>
-      <div className="bg-secondary py-16">
+      <div className="bg-background pt-28 pb-12 border-b border-border">
         <div className="max-w-3xl mx-auto px-4">
-          <h1 className="font-display text-4xl font-bold text-center mb-8 text-secondary-foreground">Search</h1>
+          <h1 className="font-display text-4xl font-bold text-center mb-8 text-white">Search</h1>
           <SearchForm initialQuery={q} />
         </div>
       </div>

@@ -99,13 +99,20 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
 
   return (
     <>
-      <div className="bg-secondary text-secondary-foreground py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
-            {currentCategory ? currentCategory.replace(/-/g, " ").toUpperCase() : "ALL GEAR"}
+      <div className="relative h-[40vh] min-h-[320px] flex items-end overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/catalog-banner.png"
+          alt="Archery collection"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-black/50 to-black/30" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 w-full">
+          <h1 className="font-display text-4xl md:text-6xl font-bold text-white mb-3">
+            {currentCategory ? currentCategory.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "The Complete Collection"}
           </h1>
-          <p className="text-secondary-foreground/70 max-w-2xl mx-auto">
-            Explore our complete collection of premium archery equipment.
+          <p className="text-white/50 max-w-2xl text-lg">
+            Explore our complete selection of premium archery equipment.
           </p>
         </div>
       </div>
@@ -113,14 +120,14 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full flex flex-col lg:flex-row gap-12">
         <aside className="w-full lg:w-64 shrink-0 space-y-8">
           <div>
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 border-b pb-2">
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 border-b border-white/10 pb-2 text-white">
               <Filter className="w-5 h-5 text-primary" /> Categories
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link
                   href="/products"
-                  className={`text-sm hover:text-primary transition-colors ${!currentCategory ? "text-primary font-bold" : "text-muted-foreground"}`}
+                  className={`text-sm hover:text-primary transition-colors ${!currentCategory ? "text-primary font-bold" : "text-white/50"}`}
                 >
                   All Products
                 </Link>
@@ -129,7 +136,7 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
                 <li key={c.id}>
                   <Link
                     href={`/products?category=${c.slug}`}
-                    className={`text-sm hover:text-primary transition-colors ${currentCategory === c.slug ? "text-primary font-bold" : "text-muted-foreground"}`}
+                    className={`text-sm hover:text-primary transition-colors ${currentCategory === c.slug ? "text-primary font-bold" : "text-white/50"}`}
                   >
                     {c.name}
                   </Link>
@@ -140,12 +147,12 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
         </aside>
 
         <div className="flex-1">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 pb-4 border-b gap-4">
-            <p className="text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 pb-4 border-b border-white/10 gap-4">
+            <p className="text-sm text-white/40">
               Showing {data.products.length} of {data.total} products
             </p>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground flex items-center gap-2">
+              <span className="text-sm text-white/40 flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4" /> Sort by:
               </span>
               <SortSelect currentSort={currentSort} currentCategory={currentCategory} />
@@ -154,15 +161,15 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
 
           {data.products.length === 0 ? (
             <div className="text-center py-20">
-              <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-xl font-bold mb-2">No products found</h3>
-              <p className="text-muted-foreground mb-6">Try adjusting your filters or search criteria.</p>
+              <Search className="w-12 h-12 text-white/20 mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-2 text-white">No products found</h3>
+              <p className="text-white/40 mb-6">Try adjusting your filters or search criteria.</p>
               <Link href="/products" className="text-primary font-bold hover:underline">
                 Clear all filters
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
               {data.products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -189,7 +196,7 @@ function SortSelect({ currentSort, currentCategory }: { currentSort: string; cur
             key={opt.value}
             href={`${baseUrl}sort=${opt.value}`}
             className={`px-3 py-1.5 rounded-lg transition-colors ${
-              currentSort === opt.value ? "bg-primary text-primary-foreground font-medium" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              currentSort === opt.value ? "bg-primary text-primary-foreground font-medium" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
             }`}
           >
             {opt.label}

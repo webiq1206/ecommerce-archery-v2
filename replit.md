@@ -76,9 +76,12 @@ artifacts-monorepo/
 ## Design
 
 - **Brand**: Apex Archery — premium outdoor performance
-- **Palette**: Charcoal #1A1A1A, Amber-gold #C8922A, Forest green #2C4A2E, Warm surface #F7F6F4
-- **Style**: Deep forest meets precision-engineered performance (think Sitka Gear meets REI)
+- **Palette**: Background #0D0D0D, Card #1A1A1A, Muted/Border #2A2A2A, Amber-gold primary #C8922A, White foreground
+- **Style**: Dark editorial aesthetic inspired by quattroarchery.com — cinematic AI archery photography, full-bleed imagery, luxury feel
 - **Typography**: Playfair Display for headings (font-display), Inter for body (font-sans)
+- **Navbar**: Fixed transparent overlay, becomes solid #0D0D0D on scroll (client component with scroll listener)
+- **AI Images**: 10 generated images in `public/images/` — hero.png, cat-*.png (x4 categories), brand-story.png, product-bow-*.png (x3), catalog-banner.png
+- **Layout**: Full-screen hero (100vh), 4-column category grid, split-screen brand story, featured products section
 
 ## Architecture
 
