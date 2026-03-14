@@ -34,7 +34,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
         {category.description && (
           <p className="text-white/60 text-sm mb-3 line-clamp-2">{category.description}</p>
         )}
-        <span className="text-primary font-medium text-sm uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-2 transition-transform duration-300">
+        <span className="text-secondary-foreground font-medium text-sm uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-2 transition-transform duration-300">
           Explore <ArrowRight className="w-4 h-4" />
         </span>
       </div>

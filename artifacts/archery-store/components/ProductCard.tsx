@@ -47,7 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
       <div className="space-y-1 px-1">
         {product.brand && (
-          <p className="text-xs font-semibold tracking-wider text-primary/70 uppercase">
+          <p className="text-xs font-semibold tracking-wider text-secondary-foreground uppercase">
             {product.brand.name}
           </p>
         )}

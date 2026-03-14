@@ -109,7 +109,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
         <div className="flex flex-col pt-4">
           {product.brand && (
-            <p className="text-sm font-bold tracking-widest text-primary uppercase mb-2">{product.brand.name}</p>
+            <p className="text-sm font-bold tracking-widest text-secondary-foreground uppercase mb-2">{product.brand.name}</p>
           )}
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 leading-tight">{product.name}</h1>
 
