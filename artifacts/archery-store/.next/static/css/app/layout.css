@@ -2497,8 +2497,10 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Oswald', sans-serif;
-    --tw-tracking: var(--tracking-wide);
-    letter-spacing: var(--tracking-wide);
+    --tw-font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-semibold);
+    --tw-tracking: var(--tracking-widest);
+    letter-spacing: var(--tracking-widest);
     color: hsl(var(--foreground));
     text-transform: uppercase;
   }
