@@ -4,6 +4,7 @@ import { Search, ChevronRight } from "lucide-react";
 import { db, productsTable, productImagesTable, brandsTable, reviewsTable, categoriesTable, productCategoriesTable, collectionsTable, productCollectionsTable } from "@workspace/db";
 import { eq, and, asc, desc, sql, gte, lte, ilike, type SQL } from "drizzle-orm";
 import { ProductCard } from "@/components/ProductCard";
+import { CatalogFilters } from "@/components/CatalogFilters";
 
 export const metadata: Metadata = {
   title: "All Gear",
@@ -133,29 +134,14 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
           <p className="text-white/50 max-w-2xl text-base leading-relaxed">{categoryDescription}</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-white/10">
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/products"
-              className={`px-4 py-2 rounded-md text-sm transition-colors ${!currentCategory ? "bg-primary text-primary-foreground font-medium" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"}`}
-            >
-              All
-            </Link>
-            {categories.map((c) => (
-              <Link
-                key={c.id}
-                href={`/products?category=${c.slug}`}
-                className={`px-4 py-2 rounded-md text-sm transition-colors ${currentCategory === c.slug ? "bg-primary text-primary-foreground font-medium" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"}`}
-              >
-                {c.name}
-              </Link>
-            ))}
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-white/40">{data.total} products</span>
-            <SortSelect currentSort={currentSort} currentCategory={currentCategory} />
-          </div>
-        </div>
+        <CatalogFilters
+          categories={categories}
+          currentCategory={currentCategory}
+          currentSort={currentSort}
+          currentMinPrice={params.minPrice || ""}
+          currentMaxPrice={params.maxPrice || ""}
+          totalProducts={data.total}
+        />
 
         {data.products.length === 0 ? (
           <div className="text-center py-20">
@@ -178,26 +164,3 @@ export default async function CatalogPage({ searchParams }: CatalogProps) {
   );
 }
 
-function SortSelect({ currentSort, currentCategory }: { currentSort: string; currentCategory: string }) {
-  const baseUrl = currentCategory ? `/products?category=${currentCategory}&` : "/products?";
-  return (
-    <div className="flex gap-2 text-sm">
-      {[
-        { value: "newest", label: "Newest" },
-        { value: "price_asc", label: "Price: Low-High" },
-        { value: "price_desc", label: "Price: High-Low" },
-        { value: "name_asc", label: "A-Z" },
-      ].map((opt) => (
-        <Link
-          key={opt.value}
-          href={`${baseUrl}sort=${opt.value}`}
-          className={`px-3 py-1.5 rounded-md transition-colors ${
-            currentSort === opt.value ? "bg-primary text-primary-foreground font-medium" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
-          }`}
-        >
-          {opt.label}
-        </Link>
-      ))}
-    </div>
-  );
-}
