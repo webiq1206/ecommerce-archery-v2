@@ -4,6 +4,7 @@ import { Shield, Truck } from "lucide-react";
 import { db, productsTable, productImagesTable, productVariantsTable, productSpecsTable, productFaqsTable, productCategoriesTable, categoriesTable, brandsTable, reviewsTable } from "@workspace/db";
 import { eq, and, asc, sql } from "drizzle-orm";
 import { AddToCartButton } from "@/components/AddToCartButton";
+import { ReviewCard } from "@/components/ReviewCard";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -27,7 +28,7 @@ async function getProduct(slug: string) {
     db.select().from(productSpecsTable).where(eq(productSpecsTable.productId, product.id)).orderBy(asc(productSpecsTable.sortOrder)),
     db.select().from(productFaqsTable).where(eq(productFaqsTable.productId, product.id)).orderBy(asc(productFaqsTable.sortOrder)),
     db.select({ categoryId: productCategoriesTable.categoryId }).from(productCategoriesTable).where(eq(productCategoriesTable.productId, product.id)),
-    db.select({ rating: reviewsTable.rating }).from(reviewsTable).where(and(eq(reviewsTable.productId, product.id), eq(reviewsTable.isApproved, true))),
+    db.select().from(reviewsTable).where(and(eq(reviewsTable.productId, product.id), eq(reviewsTable.isApproved, true))),
   ]);
 
   const categoryIds = catLinks.map((c) => c.categoryId);
@@ -52,6 +53,7 @@ async function getProduct(slug: string) {
     faqs: faqs.map((f) => ({ id: f.id, question: f.question, answer: f.answer })),
     brand,
     categories,
+    reviews: reviews.map((r) => ({ id: r.id, authorName: r.authorName, rating: r.rating, title: r.title, body: r.body, isVerified: r.isVerified, createdAt: r.createdAt.toISOString() })),
     reviewCount: reviews.length,
     avgRating: Math.round(avgRating * 10) / 10,
   };
@@ -169,10 +171,24 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       )}
 
       {product.description && (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto mb-16">
           <h2 className="font-display text-2xl font-bold mb-6">Description</h2>
           <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground">
             <p>{product.description}</p>
+          </div>
+        </div>
+      )}
+
+      {product.reviews.length > 0 && (
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-display text-2xl font-bold mb-2">Customer Reviews</h2>
+          <p className="text-muted-foreground mb-8">
+            {product.avgRating} out of 5 stars &middot; {product.reviewCount} {product.reviewCount === 1 ? "review" : "reviews"}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {product.reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
           </div>
         </div>
       )}
