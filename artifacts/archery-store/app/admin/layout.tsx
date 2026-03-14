@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-6 border-b border-white/10">
           <Link href="/" className="flex items-center gap-2 group">
             <Target className="w-8 h-8 text-primary" />
-            <span className="font-display font-bold text-xl tracking-wide uppercase">
+            <span className="font-display font-bold text-xl tracking-[0.25em] uppercase">
               APEX<span className="text-primary">ADMIN</span>
             </span>
           </Link>

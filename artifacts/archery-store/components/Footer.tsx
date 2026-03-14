@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <Link href="/" className="flex items-center gap-2 mb-6">
               <Target className="w-8 h-8 text-primary" />
-              <span className="font-display font-bold text-2xl tracking-wide uppercase">
+              <span className="font-display font-bold text-2xl tracking-[0.25em] uppercase">
                 APEX<span className="text-primary">ARCHERY</span>
               </span>
             </Link>

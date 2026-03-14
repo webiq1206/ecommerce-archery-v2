@@ -2,7 +2,7 @@
   !*** css ../../node_modules/.pnpm/next@15.5.12_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!../../node_modules/.pnpm/next@15.5.12_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./app/globals.css ***!
   \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /*! tailwindcss v4.2.1 | MIT License | https://tailwindcss.com */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap');
 @layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
@@ -67,7 +67,6 @@
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
-    --tracking-tight: -0.025em;
     --tracking-wide: 0.025em;
     --tracking-wider: 0.05em;
     --tracking-widest: 0.1em;
@@ -79,7 +78,7 @@
     --blur-md: 12px;
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    --default-font-family: 'Inter', sans-serif;
+    --default-font-family: 'Barlow Condensed', sans-serif;
     --default-mono-font-family: var(--font-mono);
   }
 }
@@ -1382,17 +1381,11 @@
   .border-t-transparent {
     border-top-color: transparent;
   }
-  .bg-\[\#0A0A0A\] {
-    background-color: #0A0A0A;
-  }
   .bg-\[\#0D0D0D\] {
     background-color: #0D0D0D;
   }
   .bg-\[\#0D0D0D\]\/95 {
     background-color: color-mix(in oklab, #0D0D0D 95%, transparent);
-  }
-  .bg-\[\#111\] {
-    background-color: #111;
   }
   .bg-background {
     background-color: hsl(var(--background));
@@ -1730,7 +1723,7 @@
     text-align: right;
   }
   .font-display {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Oswald', sans-serif;
   }
   .font-mono {
     font-family: var(--font-mono);
@@ -1801,6 +1794,10 @@
   .tracking-\[0\.2em\] {
     --tw-tracking: 0.2em;
     letter-spacing: 0.2em;
+  }
+  .tracking-\[0\.25em\] {
+    --tw-tracking: 0.25em;
+    letter-spacing: 0.25em;
   }
   .tracking-wide {
     --tw-tracking: var(--tracking-wide);
@@ -1936,9 +1933,6 @@
   }
   .uppercase {
     text-transform: uppercase;
-  }
-  .italic {
-    font-style: italic;
   }
   .line-through {
     text-decoration-line: line-through;
@@ -2472,23 +2466,23 @@
 :root {
   --background: 0 0% 5%;
   --foreground: 0 0% 95%;
-  --primary: 40 65% 47%;
+  --primary: 82 33% 37%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 140 20% 12%;
-  --secondary-foreground: 0 0% 95%;
+  --secondary: 80 15% 14%;
+  --secondary-foreground: 40 20% 88%;
   --card: 0 0% 10%;
   --card-foreground: 0 0% 95%;
   --popover: 0 0% 10%;
   --popover-foreground: 0 0% 95%;
   --muted: 0 0% 15%;
   --muted-foreground: 0 0% 55%;
-  --accent: 40 65% 47%;
+  --accent: 82 33% 37%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --border: 0 0% 18%;
   --input: 0 0% 18%;
-  --ring: 40 65% 47%;
+  --ring: 82 33% 37%;
 }
 @layer base {
   * {
@@ -2496,16 +2490,17 @@
   }
   body {
     background-color: hsl(var(--background));
-    font-family: 'Inter', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     color: hsl(var(--foreground));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
-    --tw-tracking: var(--tracking-tight);
-    letter-spacing: var(--tracking-tight);
+    font-family: 'Oswald', sans-serif;
+    --tw-tracking: var(--tracking-wide);
+    letter-spacing: var(--tracking-wide);
     color: hsl(var(--foreground));
+    text-transform: uppercase;
   }
 }
 @property --tw-space-y-reverse {

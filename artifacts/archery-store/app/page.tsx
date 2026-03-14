@@ -97,7 +97,7 @@ export default async function HomePage() {
               Pursue Perfection
             </span>
             <h1 className="font-display text-5xl sm:text-6xl md:text-8xl font-bold leading-[0.95] mb-8 text-white">
-              Engineered<br />for the <span className="text-primary italic">Wild.</span>
+              Engineered<br />for the <span className="text-primary">Wild.</span>
             </h1>
             <p className="text-lg md:text-xl text-white/60 mb-12 max-w-xl font-light leading-relaxed">
               Premium archery gear and technical apparel for those who demand absolute precision in every shot.
@@ -178,7 +178,7 @@ export default async function HomePage() {
             <div className="max-w-lg">
               <span className="text-primary text-xs font-bold tracking-[0.2em] uppercase mb-6 block">Our Story</span>
               <h2 className="font-display text-4xl md:text-5xl font-bold mb-8 leading-tight text-white">
-                Built on absolute <span className="text-primary italic">accuracy.</span>
+                Built on absolute <span className="text-primary">accuracy.</span>
               </h2>
               <p className="text-lg text-white/50 mb-6 leading-relaxed">
                 We don&apos;t just sell gear; we field-test every bow, arrow, and accessory in the harshest conditions. Our curated selection represents the pinnacle of modern archery technology.
