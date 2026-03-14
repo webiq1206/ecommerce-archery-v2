@@ -1,0 +1,2379 @@
+# Stage 1 — Replit Build Instructions
+
+## Premium Archery E-Commerce Platform: Architecture, Scaffolding & Foundation
+
+-----
+
+## Project Overview
+
+You are scaffolding a production-grade, premium e-commerce platform for an archery and hunting gear company. This is a Next.js 14+ application using the App Router, server-side rendering throughout, a PostgreSQL database via Prisma ORM, and a fully custom admin panel. The stack must be clean, scalable, and ready for a complete frontend and business logic build-out in Stage 2.
+
+Do not build placeholder UI. Build real structure: routes, schemas, API handlers, middleware, auth, and component skeletons that Cursor can build on top of. Every file you create should be real, functional, and well-organized.
+
+-----
+
+## Technology Stack
+
+All services are either completely free, open-source, or free-tier-first with no monthly minimum. The only cost-at-use service is Stripe (transaction fees only, no monthly fee) and the Anthropic API (pay per token, no subscription required).
+
+- **Framework**: Next.js 14+ with App Router (never Pages Router, never Vite)
+- **Language**: TypeScript throughout — no JavaScript files
+- **Database**: PostgreSQL via Prisma ORM — free to self-host or use Supabase free tier (500MB, no credit card required)
+- **Auth**: NextAuth.js v5 — free, open-source
+- **Payments**: Stripe — no monthly fee, transaction fees only (2.9% + 30¢). No viable free alternative for real card processing.
+- **File Storage**: UploadThing — free tier (2GB storage, unlimited uploads within bandwidth). Native Next.js integration, no credit card to start.
+- **Email**: Resend — free tier (3,000 emails/month, 100/day). More than enough to launch and validate the business.
+- **Search**: PostgreSQL Full-Text Search (built-in, zero cost) — uses `tsvector`/`tsquery` directly in Prisma raw queries. Handles product search, filters, and instant search well at this scale. Zero additional infrastructure.
+- **AI**: Anthropic Claude API — pay per token, no monthly fee. Only AI cost in the stack.
+- **Styling**: Tailwind CSS v3 — free, open-source
+- **State Management**: Zustand — free, open-source
+- **Forms**: React Hook Form + Zod — free, open-source
+- **Analytics**: PostHog — free tier (1 million events/month, session recordings, funnels). No credit card required.
+- **Rich Text Editor**: TipTap — free open-source core
+- **SMS**: Scaffold only — no service integrated until needed
+- **Cache / Rate Limiting**: In-memory cache via `lru-cache` (no external service needed at this scale). Cart persistence handled by Zustand + localStorage. Session handled by NextAuth.
+- **Deployment Target**: Vercel — free Hobby tier works for development; Pro ($20/month) needed for production cron jobs and higher limits. Alternatively: Railway (free tier) or Render (free tier).
+
+### Service Cost Summary at Launch
+
+|Service                     |Cost                               |
+|----------------------------|-----------------------------------|
+|PostgreSQL (Supabase free)  |$0                                 |
+|NextAuth                    |$0                                 |
+|UploadThing                 |$0                                 |
+|Resend                      |$0 (under 3k emails/month)         |
+|PostgreSQL Search           |$0                                 |
+|PostHog                     |$0 (under 1M events/month)         |
+|Tailwind / Zustand / Zod    |$0                                 |
+|Stripe                      |2.9% + $0.30 per transaction only  |
+|Anthropic Claude API        |~$0.003 per 1k tokens (usage-based)|
+|**Total monthly fixed cost**|**$0**                             |
+
+-----
+
+## Repository Structure
+
+Create the following complete directory and file structure. Every folder and file listed must be created, even if it contains only a scaffold or a TODO comment explaining what goes there in Stage 2.
+
+```
+/
+├── app/
+│   ├── (store)/                          # Customer-facing storefront
+│   │   ├── layout.tsx                    # Store shell: header, footer, cart drawer
+│   │   ├── page.tsx                      # Homepage (SSR)
+│   │   ├── products/
+│   │   │   ├── page.tsx                  # All products catalog
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx              # Product detail page (SSR + generateStaticParams)
+│   │   ├── collections/
+│   │   │   ├── page.tsx                  # All collections
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx              # Collection landing page (SSR)
+│   │   ├── categories/
+│   │   │   └── [...slug]/
+│   │   │       └── page.tsx              # Nested category pages (SSR)
+│   │   ├── brands/
+│   │   │   ├── page.tsx                  # All brands
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx              # Brand page (SSR)
+│   │   ├── search/
+│   │   │   └── page.tsx                  # Search results (SSR with PostgreSQL full-text search)
+│   │   ├── guides/
+│   │   │   ├── page.tsx                  # Buying guides index (SSR)
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx              # Individual guide (SSR, schema-rich)
+│   │   ├── blog/
+│   │   │   ├── page.tsx                  # Blog index (SSR)
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx              # Blog post (SSR, schema-rich)
+│   │   ├── account/
+│   │   │   ├── layout.tsx                # Account shell (auth-gated)
+│   │   │   ├── page.tsx                  # Account dashboard
+│   │   │   ├── orders/
+│   │   │   │   ├── page.tsx              # Order history
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx          # Order detail
+│   │   │   ├── wishlist/
+│   │   │   │   └── page.tsx              # Saved products
+│   │   │   ├── addresses/
+│   │   │   │   └── page.tsx              # Address book
+│   │   │   └── settings/
+│   │   │       └── page.tsx              # Account settings
+│   │   ├── checkout/
+│   │   │   ├── page.tsx                  # Checkout page
+│   │   │   └── success/
+│   │   │       └── page.tsx              # Order confirmation
+│   │   ├── cart/
+│   │   │   └── page.tsx                  # Full cart page
+│   │   ├── compare/
+│   │   │   └── page.tsx                  # Product comparison page
+│   │   └── pages/
+│   │       └── [slug]/
+│   │           └── page.tsx              # CMS flat pages (returns, shipping, privacy, etc.)
+│   │
+│   ├── (admin)/                          # Admin panel (separate layout, auth-gated)
+│   │   ├── layout.tsx                    # Admin shell: sidebar nav, top bar
+│   │   ├── admin/
+│   │   │   ├── page.tsx                  # Admin dashboard
+│   │   │   ├── products/
+│   │   │   │   ├── page.tsx              # Product list + bulk actions
+│   │   │   │   ├── new/
+│   │   │   │   │   └── page.tsx          # New product form
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx          # Edit product
+│   │   │   ├── categories/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── collections/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── brands/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── orders/
+│   │   │   │   ├── page.tsx              # Order management
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx          # Order detail + fulfillment actions
+│   │   │   ├── customers/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── distributors/
+│   │   │   │   ├── page.tsx              # Distributor/fulfillment partner management
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── fulfillment/
+│   │   │   │   └── page.tsx              # Fulfillment routing rules and logs
+│   │   │   ├── discounts/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx
+│   │   │   ├── content/
+│   │   │   │   ├── guides/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── blog/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   └── pages/
+│   │   │   │       ├── page.tsx
+│   │   │   │       └── [id]/
+│   │   │   │           └── page.tsx
+│   │   │   ├── settings/
+│   │   │   │   ├── page.tsx              # General store settings
+│   │   │   │   ├── shipping/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── taxes/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── email/
+│   │   │   │   │   └── page.tsx          # Email template management
+│   │   │   │   └── users/
+│   │   │   │       └── page.tsx          # Admin user and roles management
+│   │   │   └── reports/
+│   │   │       ├── page.tsx              # Reports overview
+│   │   │       ├── revenue/
+│   │   │       │   └── page.tsx
+│   │   │       ├── products/
+│   │   │       │   └── page.tsx
+│   │   │       ├── customers/
+│   │   │       │   └── page.tsx
+│   │   │       └── distributors/
+│   │   │           └── page.tsx
+│   │
+│   ├── api/
+│   │   ├── auth/
+│   │   │   └── [...nextauth]/
+│   │   │       └── route.ts              # NextAuth handler
+│   │   ├── products/
+│   │   │   ├── route.ts                  # GET list, POST create
+│   │   │   └── [id]/
+│   │   │       └── route.ts              # GET, PUT, DELETE single product
+│   │   ├── categories/
+│   │   │   ├── route.ts
+│   │   │   └── [id]/
+│   │   │       └── route.ts
+│   │   ├── collections/
+│   │   │   ├── route.ts
+│   │   │   └── [id]/
+│   │   │       └── route.ts
+│   │   ├── brands/
+│   │   │   ├── route.ts
+│   │   │   └── [id]/
+│   │   │       └── route.ts
+│   │   ├── orders/
+│   │   │   ├── route.ts                  # GET list, POST create order
+│   │   │   └── [id]/
+│   │   │       ├── route.ts              # GET, PUT order
+│   │   │       ├── fulfill/
+│   │   │       │   └── route.ts          # Trigger fulfillment emails
+│   │   │       └── refund/
+│   │   │           └── route.ts          # Initiate refund via Stripe
+│   │   ├── cart/
+│   │   │   └── route.ts                  # Server cart persistence
+│   │   ├── checkout/
+│   │   │   ├── route.ts                  # Create Stripe Payment Intent
+│   │   │   └── session/
+│   │   │       └── route.ts              # Validate session, calculate totals
+│   │   ├── webhooks/
+│   │   │   ├── stripe/
+│   │   │   │   └── route.ts              # Stripe webhook handler
+│   │   │   └── shipment/
+│   │   │       └── route.ts              # Shipment tracking update webhook
+│   │   ├── customers/
+│   │   │   ├── route.ts
+│   │   │   └── [id]/
+│   │   │       └── route.ts
+│   │   ├── distributors/
+│   │   │   ├── route.ts
+│   │   │   └── [id]/
+│   │   │       └── route.ts
+│   │   ├── fulfillment/
+│   │   │   ├── route.ts                  # Fulfillment routing engine
+│   │   │   └── bulk/
+│   │   │       └── route.ts              # Bulk product-distributor assignment
+│   │   ├── discounts/
+│   │   │   ├── route.ts
+│   │   │   └── validate/
+│   │   │       └── route.ts              # Coupon/discount code validation
+│   │   ├── reviews/
+│   │   │   ├── route.ts
+│   │   │   └── [id]/
+│   │   │       └── route.ts
+│   │   ├── wishlist/
+│   │   │   └── route.ts
+│   │   ├── search/
+│   │   │   └── route.ts                  # PostgreSQL full-text search (free, no external service)
+│   │   ├── ai/
+│   │   │   ├── assistant/
+│   │   │   │   └── route.ts              # AI shopping assistant (Claude API, streaming)
+│   │   │   └── recommendations/
+│   │   │       └── route.ts              # Personalized recommendation engine
+│   │   ├── uploadthing/
+│   │   │   └── route.ts                  # UploadThing file handler (free tier)
+│   │   ├── email/
+│   │   │   ├── subscribe/
+│   │   │   │   └── route.ts              # Email list opt-in
+│   │   │   └── test/
+│   │   │       └── route.ts              # Test email send (admin only)
+│   │   ├── analytics/
+│   │   │   └── route.ts                  # Server-side analytics event capture
+│   │   ├── sitemap/
+│   │   │   └── route.ts                  # Dynamic sitemap generation
+│   │   └── reports/
+│   │       ├── revenue/
+│   │       │   └── route.ts
+│   │       ├── products/
+│   │       │   └── route.ts
+│   │       └── distributors/
+│   │           └── route.ts
+│   │
+│   ├── sitemap.ts                        # Next.js sitemap (MetadataRoute.Sitemap)
+│   ├── robots.ts                         # Next.js robots config
+│   └── layout.tsx                        # Root layout (fonts, global providers)
+│
+├── components/
+│   ├── ui/                               # Primitive UI components (design system)
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   ├── Select.tsx
+│   │   ├── Checkbox.tsx
+│   │   ├── Radio.tsx
+│   │   ├── Badge.tsx
+│   │   ├── Tag.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Drawer.tsx
+│   │   ├── Tooltip.tsx
+│   │   ├── Toast.tsx
+│   │   ├── Breadcrumb.tsx
+│   │   ├── Pagination.tsx
+│   │   ├── Tabs.tsx
+│   │   ├── Accordion.tsx
+│   │   ├── Skeleton.tsx
+│   │   ├── Spinner.tsx
+│   │   ├── Rating.tsx
+│   │   ├── Price.tsx
+│   │   ├── Image.tsx                     # Wrapper around next/image
+│   │   └── index.ts                      # Barrel export
+│   │
+│   ├── layout/                           # Layout-level components
+│   │   ├── Header.tsx                    # Main nav: logo, mega menu, search, cart, account
+│   │   ├── MobileHeader.tsx              # Mobile nav: hamburger, bottom nav bar
+│   │   ├── MegaMenu.tsx                  # Desktop mega menu with category tiles
+│   │   ├── Footer.tsx                    # Footer: links, newsletter, trust badges
+│   │   ├── CartDrawer.tsx                # Slide-out mini cart
+│   │   ├── SearchDrawer.tsx              # Full-screen search overlay
+│   │   ├── AIAssistantDrawer.tsx         # AI shopping assistant panel
+│   │   ├── CookieBanner.tsx              # GDPR/cookie consent
+│   │   └── AdminLayout.tsx              # Admin sidebar + top bar shell
+│   │
+│   ├── home/                             # Homepage section components
+│   │   ├── HeroSection.tsx               # Full-bleed hero with CTA
+│   │   ├── FeaturedCollections.tsx       # Collection cards grid
+│   │   ├── CategoryGrid.tsx              # Category entry points
+│   │   ├── BestSellers.tsx               # Horizontal scroll product row
+│   │   ├── NewArrivals.tsx               # New arrivals product row
+│   │   ├── BrandStory.tsx                # Brand authority section
+│   │   ├── EducationBlock.tsx            # Learn + buying guide teaser
+│   │   ├── TestimonialsSection.tsx       # Review/testimonial carousel
+│   │   ├── TrustBar.tsx                  # Shipping, returns, support, guarantee
+│   │   ├── EmailCapture.tsx              # Email opt-in block
+│   │   └── InstagramFeed.tsx             # Social proof / UGC feed
+│   │
+│   ├── product/                          # Product-related components
+│   │   ├── ProductCard.tsx               # Standard product card (grid/list modes)
+│   │   ├── ProductCardQuick.tsx          # Quick view variant
+│   │   ├── ProductGrid.tsx               # Responsive product grid
+│   │   ├── ProductList.tsx               # List view mode
+│   │   ├── ProductGallery.tsx            # PDP image gallery with zoom
+│   │   ├── ProductInfo.tsx               # Title, price, rating, short desc
+│   │   ├── VariantSelector.tsx           # Color, size, draw weight, etc.
+│   │   ├── AddToCart.tsx                 # ATC button with quantity + sticky behavior
+│   │   ├── ProductTabs.tsx               # Description, specs, reviews, FAQ tabs
+│   │   ├── ProductSpecs.tsx              # Technical specifications table
+│   │   ├── ProductFAQ.tsx                # FAQ accordion
+│   │   ├── ProductReviews.tsx            # Reviews list + submission form
+│   │   ├── ReviewForm.tsx                # Review submission
+│   │   ├── ProductBreadcrumb.tsx         # Category > subcategory > product
+│   │   ├── RelatedProducts.tsx           # Cross-sells / recommendations
+│   │   ├── BundleBuilder.tsx             # Product bundle / pairing suggestions
+│   │   ├── RecentlyViewed.tsx            # Recently viewed strip
+│   │   ├── CompareBar.tsx                # Sticky comparison tray
+│   │   ├── WishlistButton.tsx            # Wishlist toggle
+│   │   ├── ShareButton.tsx               # Social share
+│   │   ├── StockIndicator.tsx            # In stock / low stock / out of stock
+│   │   ├── ShippingInfo.tsx              # Estimated delivery, shipping policy
+│   │   └── StickyATC.tsx                 # Sticky add-to-cart bar on scroll
+│   │
+│   ├── category/                         # Category / collection pages
+│   │   ├── CategoryHero.tsx              # Category header with image and copy
+│   │   ├── FilterPanel.tsx               # Desktop sidebar filter
+│   │   ├── FilterDrawer.tsx              # Mobile filter drawer
+│   │   ├── ActiveFilters.tsx             # Active filter chips
+│   │   ├── SortSelect.tsx                # Sort dropdown
+│   │   ├── ViewToggle.tsx                # Grid / list toggle
+│   │   ├── CategorySEOBlock.tsx          # SEO copy block at bottom of category
+│   │   └── SubcategoryLinks.tsx          # Sub-nav for category children
+│   │
+│   ├── checkout/                         # Checkout components
+│   │   ├── CheckoutForm.tsx              # Multi-step checkout form
+│   │   ├── ShippingStep.tsx              # Address entry
+│   │   ├── PaymentStep.tsx               # Stripe Elements + accelerated pay
+│   │   ├── ReviewStep.tsx                # Order review before submit
+│   │   ├── OrderSummary.tsx              # Sticky order summary sidebar
+│   │   ├── PromoCode.tsx                 # Coupon/discount code input
+│   │   ├── ExpressCheckout.tsx           # Apple Pay / Google Pay buttons
+│   │   └── ConfirmationPage.tsx          # Post-purchase confirmation
+│   │
+│   ├── account/                          # Customer account components
+│   │   ├── AccountNav.tsx
+│   │   ├── OrderCard.tsx
+│   │   ├── OrderTimeline.tsx
+│   │   ├── AddressForm.tsx
+│   │   └── ProfileForm.tsx
+│   │
+│   ├── ai/                               # AI assistant components
+│   │   ├── AIAssistant.tsx               # Main chat interface
+│   │   ├── AIMessage.tsx                 # Individual message bubble
+│   │   ├── AIProductSuggestion.tsx       # Inline product recommendation card
+│   │   ├── AIQuickQuestions.tsx          # Suggested prompt buttons
+│   │   └── AITypingIndicator.tsx
+│   │
+│   ├── search/                           # Search components
+│   │   ├── SearchInput.tsx
+│   │   ├── SearchResults.tsx
+│   │   ├── SearchSuggestions.tsx
+│   │   └── NoResults.tsx
+│   │
+│   ├── content/                          # Blog / guide components
+│   │   ├── ArticleHeader.tsx
+│   │   ├── ArticleBody.tsx
+│   │   ├── ArticleCard.tsx
+│   │   ├── GuideCTA.tsx                  # In-article product CTA block
+│   │   └── TableOfContents.tsx
+│   │
+│   ├── admin/                            # Admin panel components
+│   │   ├── AdminSidebar.tsx
+│   │   ├── AdminTopBar.tsx
+│   │   ├── DataTable.tsx                 # Reusable sortable/filterable table
+│   │   ├── BulkActionBar.tsx
+│   │   ├── ProductForm.tsx               # Full product editor form
+│   │   ├── VariantManager.tsx            # Variant builder
+│   │   ├── ImageUploader.tsx             # UploadThing upload widget (free tier)
+│   │   ├── DistributorAssign.tsx         # Per-product distributor picker
+│   │   ├── FulfillmentLog.tsx            # Order fulfillment event log
+│   │   ├── OrderDetail.tsx               # Admin order view
+│   │   ├── ReportChart.tsx               # Chart component for reports
+│   │   ├── CSVImport.tsx                 # CSV upload + mapping UI
+│   │   └── RichTextEditor.tsx            # WYSIWYG for descriptions/blog
+│   │
+│   └── seo/                              # SEO utility components
+│       ├── SchemaOrg.tsx                 # JSON-LD schema injection
+│       ├── BreadcrumbSchema.tsx
+│       ├── ProductSchema.tsx
+│       ├── ArticleSchema.tsx
+│       └── OrganizationSchema.tsx
+│
+├── lib/
+│   ├── db/
+│   │   └── prisma.ts                     # Prisma client singleton
+│   ├── auth/
+│   │   ├── config.ts                     # NextAuth config (providers, callbacks)
+│   │   └── helpers.ts                    # Session helpers, role checks
+│   ├── stripe/
+│   │   ├── client.ts                     # Stripe client init
+│   │   ├── payment-intent.ts             # Create/update payment intents
+│   │   └── webhooks.ts                   # Webhook event handlers
+│   ├── email/
+│   │   ├── resend.ts                     # Resend client init
+│   │   ├── templates/
+│   │   │   ├── order-confirmation.tsx    # React Email templates
+│   │   │   ├── fulfillment-notice.tsx    # To distributor
+│   │   │   ├── shipping-update.tsx
+│   │   │   ├── abandoned-cart.tsx
+│   │   │   ├── welcome.tsx
+│   │   │   └── password-reset.tsx
+│   │   └── send.ts                       # Typed send functions
+│   ├── search/
+│   │   ├── fts.ts                        # PostgreSQL full-text search helpers (tsvector queries)
+│   │   └── index.ts                      # Search entry point, builds WHERE clauses
+│   ├── upload/
+│   │   └── uploadthing.ts                # UploadThing client init and helpers (free tier)
+│   ├── cache/
+│   │   └── lru.ts                        # In-memory LRU cache (lru-cache package, no external service)
+│   ├── ai/
+│   │   ├── anthropic.ts                  # Anthropic client init
+│   │   ├── assistant.ts                  # AI assistant logic + system prompt
+│   │   └── recommendations.ts            # Recommendation engine logic
+│   ├── fulfillment/
+│   │   ├── router.ts                     # Fulfillment routing engine
+│   │   └── email.ts                      # Fulfillment email dispatch
+│   ├── analytics/
+│   │   └── posthog.ts                    # PostHog client + event helpers
+│   ├── tax/
+│   │   └── calculate.ts                  # Tax calculation (TaxJar or manual)
+│   ├── shipping/
+│   │   └── rates.ts                      # Shipping rate calculation logic
+│   └── utils/
+│       ├── format.ts                     # Currency, date, number formatters
+│       ├── slugify.ts
+│       ├── seo.ts                        # generateMetadata helpers
+│       └── validators.ts                 # Shared Zod schemas
+│
+├── store/                                # Zustand stores
+│   ├── cart.ts
+│   ├── wishlist.ts
+│   ├── recentlyViewed.ts
+│   ├── compare.ts
+│   ├── ui.ts                             # Drawer states, modal states
+│   └── ai.ts                             # AI assistant conversation state
+│
+├── hooks/                                # Custom React hooks
+│   ├── useCart.ts
+│   ├── useWishlist.ts
+│   ├── useRecentlyViewed.ts
+│   ├── useCompare.ts
+│   ├── useSearch.ts
+│   ├── useAI.ts
+│   ├── useIntersection.ts               # Intersection observer
+│   ├── useScrollLock.ts
+│   └── useBreakpoint.ts
+│
+├── prisma/
+│   ├── schema.prisma                     # Full database schema (see below)
+│   ├── migrations/                       # Prisma migration files
+│   └── seed.ts                           # Database seed script
+│
+├── emails/                               # React Email template previews
+│   └── preview/
+│
+├── types/
+│   ├── index.ts                          # Global type exports
+│   ├── product.ts
+│   ├── order.ts
+│   ├── user.ts
+│   ├── admin.ts
+│   └── api.ts
+│
+├── middleware.ts                         # Auth middleware, route protection
+├── next.config.ts                        # Next.js config: images, headers, redirects
+├── tailwind.config.ts                    # Tailwind config with design tokens
+├── postcss.config.js
+├── tsconfig.json
+├── .env.example                          # All required environment variables listed
+└── package.json
+```
+
+-----
+
+## Prisma Database Schema
+
+Create `/prisma/schema.prisma` with the following complete schema:
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+  addresses     Address[]
+  cartItems     CartItem[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+  FULFILLMENT_MANAGER
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── CATALOG ──────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  seoTitle    String?
+  seoDesc     String?
+  imageUrl    String?
+  imageAlt    String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  products    ProductCategory[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("categories")
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  seoTitle    String?
+  seoDesc     String?
+  logoUrl     String?
+  bannerUrl   String?
+  website     String?
+  isActive    Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("brands")
+}
+
+model Collection {
+  id          String              @id @default(cuid())
+  name        String
+  slug        String              @unique
+  description String?
+  seoTitle    String?
+  seoDesc     String?
+  imageUrl    String?
+  imageAlt    String?
+  isActive    Boolean             @default(true)
+  sortOrder   Int                 @default(0)
+  products    ProductCollection[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@map("collections")
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  sku             String   @unique
+  status          ProductStatus @default(DRAFT)
+
+  // Content
+  shortDescription String?
+  description      String?
+  seoTitle         String?
+  seoDesc          String?
+  seoKeywords      String?
+
+  // Pricing
+  price           Decimal  @db.Decimal(10, 2)
+  compareAtPrice  Decimal? @db.Decimal(10, 2)
+  cost            Decimal? @db.Decimal(10, 2)
+
+  // Physical
+  weight          Decimal? @db.Decimal(8, 2)
+  weightUnit      String   @default("lbs")
+
+  // Relations
+  brandId         String?
+  brand           Brand?   @relation(fields: [brandId], references: [id])
+  distributorId   String?
+  distributor     Distributor? @relation(fields: [distributorId], references: [id])
+
+  // Taxonomy
+  categories      ProductCategory[]
+  collections     ProductCollection[]
+  tags            ProductTag[]
+
+  // Media
+  images          ProductImage[]
+
+  // Variants and specs
+  variants        ProductVariant[]
+  specs           ProductSpec[]
+  faqs            ProductFAQ[]
+
+  // Commerce
+  reviews         Review[]
+  orderItems      OrderItem[]
+  cartItems       CartItem[]
+  wishlistItems   WishlistItem[]
+
+  // AI and SEO enrichment
+  aiSummary       String?   // Short AI-generated summary for assistant
+  buyingGuideNote String?   // Admin note for AI assistant context
+
+  // Schema fields
+  schemaType      String    @default("Product")  // Product, SportsEquipment, etc.
+  gtin            String?
+  mpn             String?
+  conditionNew    Boolean   @default(true)
+
+  isDigital       Boolean   @default(false)
+  isFeatured      Boolean   @default(false)
+  isNewArrival    Boolean   @default(false)
+  sortOrder       Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("products")
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  width     Int?
+  height    Int?
+  sortOrder Int     @default(0)
+  isLifestyle Boolean @default(false)
+
+  @@map("product_images")
+}
+
+model ProductVariant {
+  id          String  @id @default(cuid())
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku         String  @unique
+  name        String  // e.g. "30lb / Right Hand / Realtree"
+  price       Decimal? @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  inventory   Int     @default(0)
+  weight      Decimal? @db.Decimal(8, 2)
+  isAvailable Boolean @default(true)
+  options     Json    // { drawWeight: "30lb", hand: "RH", color: "Realtree" }
+  imageUrl    String?
+  sortOrder   Int     @default(0)
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
+
+  @@map("product_variants")
+}
+
+model ProductSpec {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String  // e.g. "Axle-to-Axle Length"
+  value     String  // e.g. "32.5 inches"
+  sortOrder Int     @default(0)
+
+  @@map("product_specs")
+}
+
+model ProductFAQ {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String
+  sortOrder Int     @default(0)
+
+  @@map("product_faqs")
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  isPrimary  Boolean  @default(false)
+
+  @@id([productId, categoryId])
+  @@map("product_categories")
+}
+
+model ProductCollection {
+  productId    String
+  collectionId String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  sortOrder    Int        @default(0)
+
+  @@id([productId, collectionId])
+  @@map("product_collections")
+}
+
+model ProductTag {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       String
+
+  @@map("product_tags")
+}
+
+// ─── DISTRIBUTOR / FULFILLMENT ────────────────────────────────────────────────
+
+model Distributor {
+  id             String    @id @default(cuid())
+  name           String
+  contactName    String?
+  email          String    // Primary fulfillment email
+  ccEmails       String[]  // Additional CC addresses
+  phone          String?
+  notes          String?
+  isActive       Boolean   @default(true)
+  products       Product[]
+  fulfillmentLogs FulfillmentLog[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("distributors")
+}
+
+model FulfillmentLog {
+  id              String   @id @default(cuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id])
+  distributorId   String
+  distributor     Distributor @relation(fields: [distributorId], references: [id])
+  status          FulfillmentStatus @default(PENDING)
+  emailSentAt     DateTime?
+  emailRecipients String[]
+  itemsSent       Json     // Array of { productId, variantId, sku, qty, name }
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("fulfillment_logs")
+}
+
+enum FulfillmentStatus {
+  PENDING
+  EMAIL_SENT
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  FAILED
+}
+
+// ─── ORDERS ───────────────────────────────────────────────────────────────────
+
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  status            OrderStatus @default(PENDING)
+  paymentStatus     PaymentStatus @default(UNPAID)
+  fulfillmentStatus FulfillmentStatus @default(PENDING)
+
+  // Customer
+  userId            String?
+  user              User?       @relation(fields: [userId], references: [id])
+  customerEmail     String
+  customerName      String
+  customerPhone     String?
+
+  // Addresses
+  shippingAddress   Json        // Snapshot at time of order
+  billingAddress    Json?
+
+  // Line items
+  items             OrderItem[]
+
+  // Financials
+  subtotal          Decimal     @db.Decimal(10, 2)
+  shippingTotal     Decimal     @db.Decimal(10, 2) @default(0)
+  taxTotal          Decimal     @db.Decimal(10, 2) @default(0)
+  discountTotal     Decimal     @db.Decimal(10, 2) @default(0)
+  total             Decimal     @db.Decimal(10, 2)
+
+  // Payment
+  stripePaymentIntentId String?
+  stripeChargeId        String?
+
+  // Shipping
+  shippingMethod    String?
+  trackingNumber    String?
+  trackingUrl       String?
+  shippedAt         DateTime?
+
+  // Discount
+  discountCode      String?
+  discountId        String?
+
+  // Meta
+  notes             String?
+  fulfillmentLogs   FulfillmentLog[]
+  refunds           Refund[]
+  ipAddress         String?
+  userAgent         String?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  variantId   String?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id])
+
+  // Snapshots (frozen at order time)
+  name        String
+  sku         String
+  price       Decimal  @db.Decimal(10, 2)
+  quantity    Int
+  options     Json?    // Variant options snapshot
+
+  @@map("order_items")
+}
+
+model Refund {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  amount    Decimal  @db.Decimal(10, 2)
+  reason    String?
+  stripeRefundId String?
+  createdAt DateTime @default(now())
+
+  @@map("refunds")
+}
+
+// ─── CART ─────────────────────────────────────────────────────────────────────
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String?  // For guest carts
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now())
+
+  @@map("cart_items")
+}
+
+// ─── WISHLIST ─────────────────────────────────────────────────────────────────
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("wishlist_items")
+}
+
+// ─── ADDRESSES ────────────────────────────────────────────────────────────────
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String? // "Home", "Work"
+  firstName  String
+  lastName   String
+  company    String?
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  zip        String
+  country    String  @default("US")
+  isDefault  Boolean @default(false)
+
+  @@map("addresses")
+}
+
+// ─── REVIEWS ──────────────────────────────────────────────────────────────────
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  authorName String
+  rating     Int      // 1-5
+  title      String?
+  body       String
+  isVerified Boolean  @default(false)
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("reviews")
+}
+
+// ─── DISCOUNTS ────────────────────────────────────────────────────────────────
+
+model Discount {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  type          DiscountType
+  value         Decimal      @db.Decimal(10, 2)
+  minOrderValue Decimal?     @db.Decimal(10, 2)
+  maxUses       Int?
+  usedCount     Int          @default(0)
+  isActive      Boolean      @default(true)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("discounts")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+// ─── CONTENT ──────────────────────────────────────────────────────────────────
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  body        String   // Rich text / MDX
+  coverImage  String?
+  coverAlt    String?
+  seoTitle    String?
+  seoDesc     String?
+  authorId    String?
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("blog_posts")
+}
+
+model BuyingGuide {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  body        String
+  coverImage  String?
+  coverAlt    String?
+  seoTitle    String?
+  seoDesc     String?
+  categoryId  String?
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("buying_guides")
+}
+
+model FlatPage {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  body      String
+  seoTitle  String?
+  seoDesc   String?
+  updatedAt DateTime @updatedAt
+
+  @@map("flat_pages")
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ─── EMAIL SUBSCRIBERS ────────────────────────────────────────────────────────
+
+model EmailSubscriber {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  firstName   String?
+  source      String?  // homepage, popup, checkout, guide
+  isActive    Boolean  @default(true)
+  subscribedAt DateTime @default(now())
+
+  @@map("email_subscribers")
+}
+
+// ─── STORE SETTINGS ───────────────────────────────────────────────────────────
+
+model StoreSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+
+  @@map("store_settings")
+}
+```
+
+-----
+
+## Environment Variables
+
+Create `.env.example` with every variable the application needs. Every key must be present even if the value is empty:
+
+```
+# Database — use Supabase free tier (supabase.com, no credit card required) or self-host PostgreSQL
+DATABASE_URL=postgresql://user:password@localhost:5432/archery_store
+
+# Auth — NextAuth (free, open-source)
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=http://localhost:3000
+
+# Stripe — no monthly fee, transaction fees only
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# Resend — free tier (3,000 emails/month, no credit card required — resend.com)
+RESEND_API_KEY=
+EMAIL_FROM=orders@yourdomain.com
+FULFILLMENT_BCC_EMAIL=
+
+# UploadThing — free tier (2GB storage, no credit card required — uploadthing.com)
+UPLOADTHING_SECRET=
+UPLOADTHING_APP_ID=
+
+# Anthropic — pay per token, no subscription (console.anthropic.com)
+ANTHROPIC_API_KEY=
+
+# PostHog — free tier (1M events/month, no credit card required — posthog.com)
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+
+# Store Config
+NEXT_PUBLIC_STORE_NAME=
+NEXT_PUBLIC_STORE_URL=
+NEXT_PUBLIC_STORE_CURRENCY=USD
+
+# Cron security (generate a random string)
+CRON_SECRET=
+```
+
+-----
+
+## Tailwind Design Token System
+
+Create `/tailwind.config.ts` with a complete, production-grade design token system. This is the visual foundation for the premium brand:
+
+```typescript
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: [
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './lib/**/*.{ts,tsx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // Brand palette: deep forest meets precision-engineered performance
+        brand: {
+          black:    '#0A0A0A',
+          charcoal: '#1A1A1A',
+          slate:    '#2D2D2D',
+          muted:    '#6B6B6B',
+          border:   '#E2E2E2',
+          surface:  '#F7F6F4',
+          white:    '#FAFAFA',
+          // Accent: warm amber-gold — archery precision, nature, performance
+          gold:     '#C8922A',
+          'gold-light': '#E8B84B',
+          'gold-dark':  '#9A6E1E',
+          // Secondary accent: deep forest green
+          forest:   '#2C4A2E',
+          'forest-light': '#3D6640',
+        },
+      },
+      fontFamily: {
+        // Display: editorial authority, premium outdoor brand feel
+        display: ['var(--font-display)', 'serif'],
+        // Body: clean, technical precision
+        body: ['var(--font-body)', 'sans-serif'],
+        // Mono: specs, measurements, technical data
+        mono: ['var(--font-mono)', 'monospace'],
+      },
+      fontSize: {
+        'display-2xl': ['4.5rem', { lineHeight: '1.05', letterSpacing: '-0.03em' }],
+        'display-xl':  ['3.75rem', { lineHeight: '1.08', letterSpacing: '-0.025em' }],
+        'display-lg':  ['3rem',    { lineHeight: '1.1',  letterSpacing: '-0.02em' }],
+        'display-md':  ['2.25rem', { lineHeight: '1.15', letterSpacing: '-0.015em' }],
+        'display-sm':  ['1.875rem',{ lineHeight: '1.2',  letterSpacing: '-0.01em' }],
+      },
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem',
+        '88': '22rem',
+        '96': '24rem',
+        '104': '26rem',
+        '120': '30rem',
+        '128': '32rem',
+        '144': '36rem',
+      },
+      maxWidth: {
+        'site': '1440px',
+        'content': '1200px',
+        'narrow': '800px',
+      },
+      boxShadow: {
+        'product': '0 2px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+        'product-hover': '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+        'card': '0 1px 8px rgba(0,0,0,0.06)',
+        'elevated': '0 16px 48px rgba(0,0,0,0.12)',
+        'gold': '0 0 0 3px rgba(200,146,42,0.25)',
+      },
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'snappy': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'bounce-in': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'slide-up': 'slideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'slide-right': 'slideRight 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'skeleton': 'skeleton 1.5s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(16px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideRight: {
+          '0%': { transform: 'translateX(-16px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        skeleton: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.4' },
+        },
+      },
+      aspectRatio: {
+        'product': '3 / 4',
+        'product-landscape': '4 / 3',
+        'hero': '16 / 7',
+        'square': '1 / 1',
+      },
+    },
+  },
+  plugins: [],
+}
+
+export default config
+```
+
+-----
+
+## Next.js Configuration
+
+Create `/next.config.ts`:
+
+```typescript
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ]
+  },
+  async redirects() {
+    return []  // Populate with 301 redirects as needed
+  },
+  experimental: {
+    optimizeCss: true,
+  },
+}
+
+export default nextConfig
+```
+
+-----
+
+## Core API Route Implementations
+
+Build the following API routes as complete, working handlers. Do not use placeholder responses.
+
+### `/app/api/products/route.ts`
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db/prisma'
+import { getServerSession } from 'next-auth'
+import { authConfig } from '@/lib/auth/config'
+import { z } from 'zod'
+
+const ProductQuerySchema = z.object({
+  page:       z.coerce.number().min(1).default(1),
+  limit:      z.coerce.number().min(1).max(100).default(24),
+  category:   z.string().optional(),
+  brand:      z.string().optional(),
+  collection: z.string().optional(),
+  status:     z.enum(['DRAFT', 'ACTIVE', 'ARCHIVED']).optional(),
+  search:     z.string().optional(),
+  sort:       z.enum(['newest', 'price_asc', 'price_desc', 'name_asc']).default('newest'),
+  featured:   z.coerce.boolean().optional(),
+})
+
+export async function GET(req: NextRequest) {
+  try {
+    const params = Object.fromEntries(req.nextUrl.searchParams)
+    const query = ProductQuerySchema.parse(params)
+    const skip = (query.page - 1) * query.limit
+
+    const where: any = {}
+    if (query.status) where.status = query.status
+    else where.status = 'ACTIVE'
+    if (query.brand) where.brand = { slug: query.brand }
+    if (query.featured !== undefined) where.isFeatured = query.featured
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { sku: { contains: query.search, mode: 'insensitive' } },
+      ]
+    }
+    if (query.category) {
+      where.categories = { some: { category: { slug: query.category } } }
+    }
+    if (query.collection) {
+      where.collections = { some: { collection: { slug: query.collection } } }
+    }
+
+    const orderBy: any = {
+      newest: { createdAt: 'desc' },
+      price_asc: { price: 'asc' },
+      price_desc: { price: 'desc' },
+      name_asc: { name: 'asc' },
+    }[query.sort]
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        skip,
+        take: query.limit,
+        orderBy,
+        include: {
+          images: { orderBy: { sortOrder: 'asc' }, take: 2 },
+          brand: { select: { name: true, slug: true } },
+          categories: {
+            where: { isPrimary: true },
+            include: { category: { select: { name: true, slug: true } } },
+          },
+          _count: { select: { reviews: { where: { isApproved: true } } } },
+        },
+      }),
+      prisma.product.count({ where }),
+    ])
+
+    return NextResponse.json({
+      products,
+      total,
+      page: query.page,
+      limit: query.limit,
+      totalPages: Math.ceil(total / query.limit),
+    })
+  } catch (err) {
+    console.error('[GET /api/products]', err)
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authConfig)
+    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const body = await req.json()
+    // Full product creation logic built in Stage 2
+    const product = await prisma.product.create({ data: body })
+    return NextResponse.json(product, { status: 201 })
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
+  }
+}
+```
+
+### `/app/api/fulfillment/route.ts`
+
+Build the fulfillment routing engine. This is a critical business feature:
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db/prisma'
+import { sendFulfillmentEmail } from '@/lib/fulfillment/email'
+import { getServerSession } from 'next-auth'
+import { authConfig } from '@/lib/auth/config'
+
+/**
+ * POST /api/fulfillment
+ * Called after successful payment. Accepts orderId.
+ * 1. Load order with all items and their distributor assignments
+ * 2. Group items by distributor
+ * 3. Send one fulfillment email per distributor with only their items
+ * 4. Log all fulfillment events
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const { orderId } = await req.json()
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: { distributor: true },
+            },
+            variant: true,
+          },
+        },
+        fulfillmentLogs: true,
+      },
+    })
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    }
+
+    // Group items by distributor
+    const distributorMap = new Map<string, {
+      distributor: any,
+      items: any[]
+    }>()
+
+    const unassignedItems: any[] = []
+
+    for (const item of order.items) {
+      const distributor = item.product.distributor
+      if (!distributor) {
+        unassignedItems.push(item)
+        continue
+      }
+      if (!distributorMap.has(distributor.id)) {
+        distributorMap.set(distributor.id, { distributor, items: [] })
+      }
+      distributorMap.get(distributor.id)!.items.push(item)
+    }
+
+    const logs = []
+
+    // Send fulfillment email to each distributor
+    for (const [distributorId, { distributor, items }] of distributorMap) {
+      try {
+        await sendFulfillmentEmail({
+          order,
+          distributor,
+          items,
+        })
+
+        const log = await prisma.fulfillmentLog.create({
+          data: {
+            orderId: order.id,
+            distributorId,
+            status: 'EMAIL_SENT',
+            emailSentAt: new Date(),
+            emailRecipients: [distributor.email, ...distributor.ccEmails],
+            itemsSent: items.map(i => ({
+              productId: i.productId,
+              variantId: i.variantId,
+              sku: i.sku,
+              name: i.name,
+              qty: i.quantity,
+              options: i.options,
+            })),
+          },
+        })
+        logs.push(log)
+      } catch (emailError) {
+        await prisma.fulfillmentLog.create({
+          data: {
+            orderId: order.id,
+            distributorId,
+            status: 'FAILED',
+            itemsSent: items.map(i => ({ sku: i.sku, qty: i.quantity })),
+            notes: String(emailError),
+          },
+        })
+      }
+    }
+
+    // If unassigned items exist, alert the store admin
+    if (unassignedItems.length > 0) {
+      console.warn(`[FULFILLMENT] Order ${order.orderNumber} has ${unassignedItems.length} items with no distributor assigned.`)
+      // TODO: Send internal alert email in Stage 2
+    }
+
+    return NextResponse.json({ success: true, logsCreated: logs.length, unassignedCount: unassignedItems.length })
+  } catch (err) {
+    console.error('[FULFILLMENT ERROR]', err)
+    return NextResponse.json({ error: 'Fulfillment routing failed' }, { status: 500 })
+  }
+}
+```
+
+### `/app/api/ai/assistant/route.ts`
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
+import { prisma } from '@/lib/db/prisma'
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+const SYSTEM_PROMPT = `You are an expert archery and hunting equipment advisor for [STORE NAME]. 
+You have deep knowledge of bows, arrows, broadheads, accessories, optics, and archery technique for both target shooting and hunting.
+
+Your role is to help customers find the perfect gear based on their specific needs. Always ask clarifying questions about:
+- Experience level (beginner, intermediate, advanced)
+- Primary use (target, 3D, bowhunting, competitive)
+- Game being hunted (deer, elk, turkey, small game)
+- Draw length and draw weight preferences
+- Budget range
+- Dominant hand
+- Physical considerations (age, strength, injury limitations)
+
+When recommending products:
+- Recommend specific products from the store catalog only
+- Explain WHY each product suits their needs
+- Suggest complementary bundles when appropriate
+- Be honest if a product may not fit their needs
+- Always stay within the customer's stated budget
+- Format product recommendations as JSON blocks the UI can parse and render as product cards
+
+When presenting product recommendations, use this exact format:
+<PRODUCT_RECOMMENDATIONS>
+[{"productId": "...", "productSlug": "...", "reason": "..."}]
+</PRODUCT_RECOMMENDATIONS>
+
+You must NEVER recommend products not in the store catalog. 
+You must NEVER give medical or safety advice beyond standard archery safety.
+You must ALWAYS be friendly, knowledgeable, and focused on finding the right gear.`
+
+export async function POST(req: NextRequest) {
+  try {
+    const { messages, sessionId } = await req.json()
+
+    // Stream response back to client
+    const stream = await anthropic.messages.stream({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages,
+    })
+
+    const encoder = new TextEncoder()
+    const readable = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of stream) {
+          if (
+            chunk.type === 'content_block_delta' &&
+            chunk.delta.type === 'text_delta'
+          ) {
+            controller.enqueue(encoder.encode(chunk.delta.text))
+          }
+        }
+        controller.close()
+      },
+    })
+
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+      },
+    })
+  } catch (err) {
+    console.error('[AI ASSISTANT ERROR]', err)
+    return NextResponse.json({ error: 'AI assistant unavailable' }, { status: 500 })
+  }
+}
+```
+
+### `/app/api/webhooks/stripe/route.ts`
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { stripe } from '@/lib/stripe/client'
+import { prisma } from '@/lib/db/prisma'
+import Stripe from 'stripe'
+
+export async function POST(req: NextRequest) {
+  const body = await req.text()
+  const signature = req.headers.get('stripe-signature')!
+
+  let event: Stripe.Event
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+  } catch (err) {
+    return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 })
+  }
+
+  try {
+    switch (event.type) {
+      case 'payment_intent.succeeded': {
+        const pi = event.data.object as Stripe.PaymentIntent
+        const order = await prisma.order.findFirst({
+          where: { stripePaymentIntentId: pi.id },
+        })
+        if (order) {
+          await prisma.order.update({
+            where: { id: order.id },
+            data: { paymentStatus: 'PAID', status: 'CONFIRMED' },
+          })
+          // Trigger fulfillment
+          await fetch(`${process.env.NEXTAUTH_URL}/api/fulfillment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: order.id }),
+          })
+          // TODO: Send order confirmation email in Stage 2
+        }
+        break
+      }
+
+      case 'payment_intent.payment_failed': {
+        const pi = event.data.object as Stripe.PaymentIntent
+        await prisma.order.updateMany({
+          where: { stripePaymentIntentId: pi.id },
+          data: { paymentStatus: 'FAILED', status: 'CANCELLED' },
+        })
+        break
+      }
+
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge
+        // Handle refund reconciliation
+        break
+      }
+
+      default:
+        console.log(`[STRIPE WEBHOOK] Unhandled event: ${event.type}`)
+    }
+
+    return NextResponse.json({ received: true })
+  } catch (err) {
+    console.error('[STRIPE WEBHOOK ERROR]', err)
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
+  }
+}
+
+export const config = { api: { bodyParser: false } }
+```
+
+-----
+
+## Middleware
+
+Create `/middleware.ts`:
+
+```typescript
+import { withAuth } from 'next-auth/middleware'
+import { NextResponse } from 'next/server'
+
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token
+    const path = req.nextUrl.pathname
+
+    // Admin routes require ADMIN or SUPER_ADMIN role
+    if (path.startsWith('/admin')) {
+      if (!token || !['ADMIN', 'SUPER_ADMIN', 'FULFILLMENT_MANAGER'].includes(token.role as string)) {
+        return NextResponse.redirect(new URL('/auth/signin?callbackUrl=' + path, req.url))
+      }
+    }
+
+    return NextResponse.next()
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        const path = req.nextUrl.pathname
+        // Public routes always allowed
+        if (!path.startsWith('/admin') && !path.startsWith('/account')) {
+          return true
+        }
+        return !!token
+      },
+    },
+  }
+)
+
+export const config = {
+  matcher: ['/admin/:path*', '/account/:path*', '/api/admin/:path*'],
+}
+```
+
+-----
+
+## Zustand Store Implementations
+
+### `/store/cart.ts`
+
+```typescript
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+
+export interface CartItem {
+  id: string
+  productId: string
+  variantId?: string
+  slug: string
+  name: string
+  sku: string
+  price: number
+  quantity: number
+  imageUrl?: string
+  options?: Record<string, string>
+}
+
+interface CartStore {
+  items: CartItem[]
+  isOpen: boolean
+  addItem: (item: CartItem) => void
+  removeItem: (id: string) => void
+  updateQuantity: (id: string, quantity: number) => void
+  clearCart: () => void
+  openCart: () => void
+  closeCart: () => void
+  get itemCount(): number
+  get subtotal(): number
+}
+
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      isOpen: false,
+
+      addItem: (item) => set((state) => {
+        const existing = state.items.find(
+          (i) => i.productId === item.productId && i.variantId === item.variantId
+        )
+        if (existing) {
+          return {
+            items: state.items.map((i) =>
+              i.id === existing.id
+                ? { ...i, quantity: i.quantity + item.quantity }
+                : i
+            ),
+            isOpen: true,
+          }
+        }
+        return { items: [...state.items, item], isOpen: true }
+      }),
+
+      removeItem: (id) => set((state) => ({
+        items: state.items.filter((i) => i.id !== id),
+      })),
+
+      updateQuantity: (id, quantity) => set((state) => ({
+        items: quantity <= 0
+          ? state.items.filter((i) => i.id !== id)
+          : state.items.map((i) => i.id === id ? { ...i, quantity } : i),
+      })),
+
+      clearCart: () => set({ items: [] }),
+      openCart: () => set({ isOpen: true }),
+      closeCart: () => set({ isOpen: false }),
+
+      get itemCount() {
+        return get().items.reduce((sum, i) => sum + i.quantity, 0)
+      },
+
+      get subtotal() {
+        return get().items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+      },
+    }),
+    {
+      name: 'archery-cart',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+)
+```
+
+-----
+
+## Free-Service API Implementations
+
+### PostgreSQL Full-Text Search — `/app/api/search/route.ts`
+
+This replaces Algolia entirely. PostgreSQL’s built-in `tsvector`/`tsquery` handles product search with zero external dependencies or cost. Performance is excellent for catalogs under 100k products.
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db/prisma'
+
+export async function GET(req: NextRequest) {
+  const query = req.nextUrl.searchParams.get('q')?.trim()
+  const limit = Math.min(Number(req.nextUrl.searchParams.get('limit') || '12'), 48)
+  const page = Number(req.nextUrl.searchParams.get('page') || '1')
+  const skip = (page - 1) * limit
+
+  if (!query || query.length < 2) {
+    return NextResponse.json({ results: [], total: 0 })
+  }
+
+  try {
+    // Use Prisma raw query for full-text search with ranking
+    // ts_rank orders results by relevance — exact matches rank higher than partial
+    const results = await prisma.$queryRaw<any[]>`
+      SELECT
+        p.id,
+        p.name,
+        p.slug,
+        p.price,
+        p."compareAtPrice",
+        p."shortDescription",
+        b.name as "brandName",
+        b.slug as "brandSlug",
+        ts_rank(
+          to_tsvector('english', p.name || ' ' || COALESCE(p."shortDescription", '') || ' ' || COALESCE(b.name, '')),
+          plainto_tsquery('english', ${query})
+        ) as rank
+      FROM products p
+      LEFT JOIN brands b ON p."brandId" = b.id
+      WHERE
+        p.status = 'ACTIVE'
+        AND to_tsvector('english', p.name || ' ' || COALESCE(p."shortDescription", '') || ' ' || COALESCE(b.name, ''))
+            @@ plainto_tsquery('english', ${query})
+      ORDER BY rank DESC
+      LIMIT ${limit}
+      OFFSET ${skip}
+    `
+
+    // Get primary image for each result
+    const productIds = results.map(r => r.id)
+    const images = await prisma.productImage.findMany({
+      where: { productId: { in: productIds }, sortOrder: 0 },
+      select: { productId: true, url: true, altText: true },
+    })
+    const imageMap = new Map(images.map(i => [i.productId, i]))
+
+    // Count total matches for pagination
+    const countResult = await prisma.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*) as count
+      FROM products p
+      LEFT JOIN brands b ON p."brandId" = b.id
+      WHERE
+        p.status = 'ACTIVE'
+        AND to_tsvector('english', p.name || ' ' || COALESCE(p."shortDescription", '') || ' ' || COALESCE(b.name, ''))
+            @@ plainto_tsquery('english', ${query})
+    `
+
+    const enriched = results.map(r => ({
+      ...r,
+      image: imageMap.get(r.id) || null,
+    }))
+
+    return NextResponse.json({
+      results: enriched,
+      total: Number(countResult[0].count),
+      page,
+      totalPages: Math.ceil(Number(countResult[0].count) / limit),
+    })
+  } catch (err) {
+    console.error('[SEARCH ERROR]', err)
+    return NextResponse.json({ error: 'Search failed' }, { status: 500 })
+  }
+}
+```
+
+Also create the search helper library at `/lib/search/fts.ts`:
+
+```typescript
+import { prisma } from '@/lib/db/prisma'
+
+/**
+ * Product autocomplete suggestions — used for the search drawer instant results.
+ * Returns up to 6 product name suggestions as the user types.
+ */
+export async function getSearchSuggestions(query: string): Promise<string[]> {
+  if (!query || query.length < 2) return []
+
+  const results = await prisma.$queryRaw<{ name: string }[]>`
+    SELECT DISTINCT name
+    FROM products
+    WHERE
+      status = 'ACTIVE'
+      AND name ILIKE ${'%' + query + '%'}
+    ORDER BY name ASC
+    LIMIT 6
+  `
+  return results.map(r => r.name)
+}
+
+/**
+ * Category-scoped product search — used on category pages with the filter panel.
+ * Falls back to a plain Prisma query with ILIKE when no full-text match is needed.
+ */
+export async function searchProductsInCategory(
+  categorySlug: string,
+  query?: string,
+  filters?: {
+    minPrice?: number
+    maxPrice?: number
+    brands?: string[]
+    inStock?: boolean
+  }
+) {
+  const where: any = {
+    status: 'ACTIVE',
+    categories: { some: { category: { slug: categorySlug } } },
+  }
+
+  if (query) {
+    where.OR = [
+      { name: { contains: query, mode: 'insensitive' } },
+      { shortDescription: { contains: query, mode: 'insensitive' } },
+    ]
+  }
+
+  if (filters?.minPrice !== undefined || filters?.maxPrice !== undefined) {
+    where.price = {}
+    if (filters.minPrice !== undefined) where.price.gte = filters.minPrice
+    if (filters.maxPrice !== undefined) where.price.lte = filters.maxPrice
+  }
+
+  if (filters?.brands?.length) {
+    where.brand = { slug: { in: filters.brands } }
+  }
+
+  if (filters?.inStock) {
+    where.variants = { some: { isAvailable: true, inventory: { gt: 0 } } }
+  }
+
+  return prisma.product.findMany({
+    where,
+    include: {
+      images: { where: { sortOrder: 0 }, take: 1 },
+      brand: { select: { name: true, slug: true } },
+      _count: { select: { reviews: { where: { isApproved: true } } } },
+    },
+  })
+}
+```
+
+### UploadThing File Upload — `/app/api/uploadthing/route.ts`
+
+This replaces Cloudinary. UploadThing is free (2GB storage, no credit card) and has first-class Next.js support.
+
+```typescript
+import { createUploadthing, type FileRouter } from 'uploadthing/next'
+import { getServerSession } from 'next-auth'
+import { authConfig } from '@/lib/auth/config'
+
+const f = createUploadthing()
+
+// Define what file types are allowed and who can upload
+export const uploadRouter = {
+  // Product images — admin only, up to 8 images per upload
+  productImage: f({ image: { maxFileSize: '4MB', maxFileCount: 8 } })
+    .middleware(async () => {
+      const session = await getServerSession(authConfig)
+      if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+        throw new Error('Unauthorized')
+      }
+      return { userId: session.user.id }
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // The file.url is immediately available and publicly accessible
+      return { url: file.url, name: file.name }
+    }),
+
+  // Blog / guide cover images — admin only, single image
+  contentImage: f({ image: { maxFileSize: '4MB', maxFileCount: 1 } })
+    .middleware(async () => {
+      const session = await getServerSession(authConfig)
+      if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
+        throw new Error('Unauthorized')
+      }
+      return { userId: session.user.id }
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.url }
+    }),
+} satisfies FileRouter
+
+export type OurFileRouter = typeof uploadRouter
+
+// Export the route handlers
+import { createNextRouteHandler } from 'uploadthing/next'
+export const { GET, POST } = createNextRouteHandler({ router: uploadRouter })
+```
+
+Also create the client-side UploadThing helper at `/lib/upload/uploadthing.ts`:
+
+```typescript
+import { generateUploadButton, generateUploadDropzone } from '@uploadthing/react'
+import type { OurFileRouter } from '@/app/api/uploadthing/route'
+
+// These are pre-built upload components — drop them directly into admin forms
+export const UploadButton = generateUploadButton<OurFileRouter>()
+export const UploadDropzone = generateUploadDropzone<OurFileRouter>()
+```
+
+-----
+
+## Fulfillment Email Library
+
+### `/lib/fulfillment/email.ts`
+
+```typescript
+import { resend } from '@/lib/email/resend'
+import { FulfillmentNoticeEmail } from '@/lib/email/templates/fulfillment-notice'
+
+interface FulfillmentEmailOptions {
+  order: any
+  distributor: any
+  items: any[]
+}
+
+export async function sendFulfillmentEmail({
+  order,
+  distributor,
+  items,
+}: FulfillmentEmailOptions) {
+  const recipients = [distributor.email, ...distributor.ccEmails].filter(Boolean)
+
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM!,
+    to: recipients,
+    bcc: process.env.FULFILLMENT_BCC_EMAIL,
+    subject: `New Order to Fulfill — Order #${order.orderNumber}`,
+    react: FulfillmentNoticeEmail({ order, distributor, items }),
+  })
+}
+```
+
+-----
+
+## SEO Utilities
+
+### `/lib/utils/seo.ts`
+
+```typescript
+import { Metadata } from 'next'
+
+const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Archery Store'
+const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL || 'https://yourdomain.com'
+
+export function generateProductMetadata(product: any): Metadata {
+  const title = product.seoTitle || `${product.name} | ${STORE_NAME}`
+  const description = product.seoDesc || product.shortDescription || `Buy the ${product.name} at ${STORE_NAME}. Free shipping on qualifying orders.`
+  const imageUrl = product.images?.[0]?.url
+
+  return {
+    title,
+    description,
+    keywords: product.seoKeywords,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `${STORE_URL}/products/${product.slug}`,
+      images: imageUrl ? [{ url: imageUrl, alt: product.images[0].altText || product.name }] : [],
+      siteName: STORE_NAME,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: imageUrl ? [imageUrl] : [],
+    },
+    alternates: {
+      canonical: `${STORE_URL}/products/${product.slug}`,
+    },
+  }
+}
+
+export function generateCategoryMetadata(category: any): Metadata {
+  const title = category.seoTitle || `${category.name} | ${STORE_NAME}`
+  const description = category.seoDesc || `Shop our full selection of ${category.name}. Trusted archery gear, fast shipping.`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `${STORE_URL}/categories/${category.slug}`,
+      siteName: STORE_NAME,
+    },
+    alternates: {
+      canonical: `${STORE_URL}/categories/${category.slug}`,
+    },
+  }
+}
+
+export function generateBlogMetadata(post: any): Metadata {
+  const title = post.seoTitle || `${post.title} | ${STORE_NAME}`
+  const description = post.seoDesc || post.excerpt || ''
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'article',
+      url: `${STORE_URL}/blog/${post.slug}`,
+      images: post.coverImage ? [{ url: post.coverImage, alt: post.coverAlt || post.title }] : [],
+      publishedTime: post.publishedAt,
+      siteName: STORE_NAME,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+    alternates: {
+      canonical: `${STORE_URL}/blog/${post.slug}`,
+    },
+  }
+}
+```
+
+-----
+
+## Sitemap and Robots
+
+### `/app/sitemap.ts`
+
+```typescript
+import { MetadataRoute } from 'next'
+import { prisma } from '@/lib/db/prisma'
+
+const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL!
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [products, categories, collections, brands, posts, guides] = await Promise.all([
+    prisma.product.findMany({ where: { status: 'ACTIVE' }, select: { slug: true, updatedAt: true } }),
+    prisma.category.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
+    prisma.collection.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
+    prisma.brand.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
+    prisma.blogPost.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, updatedAt: true } }),
+    prisma.buyingGuide.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, updatedAt: true } }),
+  ])
+
+  const staticPages: MetadataRoute.Sitemap = [
+    { url: STORE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
+    { url: `${STORE_URL}/products`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${STORE_URL}/collections`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${STORE_URL}/brands`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${STORE_URL}/guides`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${STORE_URL}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 },
+  ]
+
+  return [
+    ...staticPages,
+    ...products.map(p => ({ url: `${STORE_URL}/products/${p.slug}`, lastModified: p.updatedAt, changeFrequency: 'weekly' as const, priority: 0.8 })),
+    ...categories.map(c => ({ url: `${STORE_URL}/categories/${c.slug}`, lastModified: c.updatedAt, changeFrequency: 'weekly' as const, priority: 0.7 })),
+    ...collections.map(c => ({ url: `${STORE_URL}/collections/${c.slug}`, lastModified: c.updatedAt, changeFrequency: 'weekly' as const, priority: 0.7 })),
+    ...brands.map(b => ({ url: `${STORE_URL}/brands/${b.slug}`, lastModified: b.updatedAt, changeFrequency: 'monthly' as const, priority: 0.6 })),
+    ...posts.map(p => ({ url: `${STORE_URL}/blog/${p.slug}`, lastModified: p.updatedAt, changeFrequency: 'monthly' as const, priority: 0.6 })),
+    ...guides.map(g => ({ url: `${STORE_URL}/guides/${g.slug}`, lastModified: g.updatedAt, changeFrequency: 'monthly' as const, priority: 0.7 })),
+  ]
+}
+```
+
+### `/app/robots.ts`
+
+```typescript
+import { MetadataRoute } from 'next'
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/admin/', '/api/', '/account/', '/checkout/', '/cart/'],
+      },
+    ],
+    sitemap: `${process.env.NEXT_PUBLIC_STORE_URL}/sitemap.xml`,
+  }
+}
+```
+
+-----
+
+## Package.json
+
+Create `/package.json` with all dependencies:
+
+```json
+{
+  "name": "archery-ecommerce",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "ts-node --project tsconfig.json prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "email:dev": "email dev --dir emails"
+  },
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@prisma/client": "^5.14.0",
+    "next-auth": "^5.0.0-beta.19",
+
+    "stripe": "^15.12.0",
+    "@stripe/stripe-js": "^4.3.0",
+    "@stripe/react-stripe-js": "^2.7.3",
+
+    "resend": "^3.3.0",
+    "@react-email/components": "^0.0.21",
+    "react-email": "^2.1.4",
+
+    "uploadthing": "^6.13.0",
+    "@uploadthing/react": "^6.7.0",
+
+    "@anthropic-ai/sdk": "^0.26.0",
+
+    "lru-cache": "^11.0.0",
+
+    "zustand": "^4.5.4",
+    "react-hook-form": "^7.52.1",
+    "@hookform/resolvers": "^3.9.0",
+    "zod": "^3.23.8",
+
+    "posthog-js": "^1.145.0",
+    "posthog-node": "^4.0.1",
+
+    "tailwindcss": "^3.4.7",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.4.0",
+    "lucide-react": "^0.414.0",
+
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-dropdown-menu": "^2.1.1",
+    "@radix-ui/react-accordion": "^1.2.0",
+    "@radix-ui/react-tabs": "^1.1.0",
+    "@radix-ui/react-select": "^2.1.1",
+    "@radix-ui/react-slider": "^1.2.0",
+    "@radix-ui/react-checkbox": "^1.1.1",
+    "@radix-ui/react-toast": "^1.2.1",
+    "@radix-ui/react-tooltip": "^1.1.2",
+
+    "embla-carousel-react": "^8.2.0",
+    "framer-motion": "^11.3.17",
+    "sharp": "^0.33.4",
+    "slugify": "^1.6.6",
+    "date-fns": "^3.6.0",
+    "nanoid": "^5.0.7",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.12",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5.5.4",
+    "prisma": "^5.14.0",
+    "postcss": "^8.4.40",
+    "autoprefixer": "^10.4.19",
+    "ts-node": "^10.9.2",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.5"
+  }
+}
+```
+
+-----
+
+## Database Seed Script
+
+Create `/prisma/seed.ts` with realistic test data for every major entity: 3 categories with children, 5 brands, 3 collections, 2 distributors, 20 products across categories with variants, specs, and FAQs, 1 admin user, and 3 blog posts. Use realistic archery industry data throughout.
+
+-----
+
+## Final Checklist Before Handing Off to Stage 2
+
+Before completing Stage 1, verify the following:
+
+- [ ] `npx prisma generate` runs without errors
+- [ ] `npx prisma db push` applies schema to a connected database
+- [ ] `npm run dev` starts the dev server without TypeScript errors
+- [ ] All route files exist and return non-500 responses
+- [ ] Zustand stores are importable and typed correctly
+- [ ] Tailwind config loads and design tokens are accessible
+- [ ] `.env.example` contains every variable referenced in the codebase
+- [ ] All component files exist as properly typed skeletons, even if empty
+- [ ] The seed script runs and populates test data
+- [ ] The fulfillment routing engine compiles correctly
+- [ ] The AI assistant route streams a response from Anthropic
+
+When all checks pass, the project is ready for Stage 2 Cursor build-out.
