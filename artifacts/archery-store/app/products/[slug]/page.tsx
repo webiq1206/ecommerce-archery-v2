@@ -1,197 +1,312 @@
 import type { Metadata } from "next";
+import {
+  db,
+  productsTable,
+  productImagesTable,
+  productVariantsTable,
+  productSpecsTable,
+  productFaqsTable,
+  productCategoriesTable,
+  productTagsTable,
+  categoriesTable,
+  brandsTable,
+  reviewsTable,
+} from "@workspace/db";
+import { eq, and, sql, asc, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { Shield, Truck } from "lucide-react";
-import { db, productsTable, productImagesTable, productVariantsTable, productSpecsTable, productFaqsTable, productCategoriesTable, categoriesTable, brandsTable, reviewsTable } from "@workspace/db";
-import { eq, and, asc, sql } from "drizzle-orm";
-import { AddToCartButton } from "@/components/AddToCartButton";
-import { ReviewCard } from "@/components/ReviewCard";
+import { ProductGallery } from "@/components/product/ProductGallery";
+import { ProductInfo } from "@/components/product/ProductInfo";
+import { ProductTabs } from "@/components/product/ProductTabs";
+import { ReviewSection } from "@/components/product/ReviewSection";
+import { RelatedProducts } from "@/components/product/RelatedProducts";
+import { BundleBuilder } from "@/components/product/BundleBuilder";
+import { SchemaOrg } from "@/components/seo/SchemaOrg";
+import { productSchema, breadcrumbSchema, faqSchema } from "@/lib/seo/schemas";
+import { ProductViewTracker } from "@/components/analytics/ProductViewTracker";
 
-interface ProductPageProps {
-  params: Promise<{ slug: string }>;
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const products = await db
+    .select({ slug: productsTable.slug })
+    .from(productsTable)
+    .where(eq(productsTable.status, "ACTIVE"));
+  return products.map((p) => ({ slug: p.slug }));
 }
 
-async function getProduct(slug: string) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
   const [product] = await db
     .select()
     .from(productsTable)
-    .where(and(
-      sql`(${productsTable.slug} = ${slug} OR ${productsTable.id} = ${slug})`,
-      eq(productsTable.status, "ACTIVE")
-    ))
+    .where(eq(productsTable.slug, slug))
+    .limit(1);
+  if (!product) return { title: "Product Not Found" };
+
+  const [image] = await db
+    .select()
+    .from(productImagesTable)
+    .where(eq(productImagesTable.productId, product.id))
+    .orderBy(asc(productImagesTable.sortOrder))
     .limit(1);
 
-  if (!product) return null;
-
-  const [images, variants, specs, faqs, catLinks, reviews] = await Promise.all([
-    db.select().from(productImagesTable).where(eq(productImagesTable.productId, product.id)).orderBy(asc(productImagesTable.sortOrder)),
-    db.select().from(productVariantsTable).where(eq(productVariantsTable.productId, product.id)).orderBy(asc(productVariantsTable.sortOrder)),
-    db.select().from(productSpecsTable).where(eq(productSpecsTable.productId, product.id)).orderBy(asc(productSpecsTable.sortOrder)),
-    db.select().from(productFaqsTable).where(eq(productFaqsTable.productId, product.id)).orderBy(asc(productFaqsTable.sortOrder)),
-    db.select({ categoryId: productCategoriesTable.categoryId }).from(productCategoriesTable).where(eq(productCategoriesTable.productId, product.id)),
-    db.select().from(reviewsTable).where(and(eq(reviewsTable.productId, product.id), eq(reviewsTable.isApproved, true))),
-  ]);
-
-  const categoryIds = catLinks.map((c) => c.categoryId);
-  const categories =
-    categoryIds.length > 0
-      ? await db.select({ id: categoriesTable.id, name: categoriesTable.name, slug: categoriesTable.slug }).from(categoriesTable).where(sql`${categoriesTable.id} IN ${categoryIds}`)
-      : [];
-
-  let brand = null;
-  if (product.brandId) {
-    const [b] = await db.select({ id: brandsTable.id, name: brandsTable.name, slug: brandsTable.slug }).from(brandsTable).where(eq(brandsTable.id, product.brandId));
-    brand = b ?? null;
-  }
-
-  const avgRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+  const brand = product.brandId
+    ? (await db.select().from(brandsTable).where(eq(brandsTable.id, product.brandId)).limit(1))[0]
+    : null;
 
   return {
-    ...product,
-    images: images.map((i) => ({ id: i.id, url: i.url, altText: i.altText, sortOrder: i.sortOrder })),
-    variants: variants.map((v) => ({ id: v.id, sku: v.sku, name: v.name, price: v.price, compareAtPrice: v.compareAtPrice })),
-    specs: specs.map((s) => ({ id: s.id, label: s.label, value: s.value })),
-    faqs: faqs.map((f) => ({ id: f.id, question: f.question, answer: f.answer })),
-    brand,
-    categories,
-    reviews: reviews.map((r) => ({ id: r.id, authorName: r.authorName, rating: r.rating, title: r.title, body: r.body, isVerified: r.isVerified, createdAt: r.createdAt.toISOString() })),
-    reviewCount: reviews.length,
-    avgRating: Math.round(avgRating * 10) / 10,
+    title: product.seoTitle ?? product.name,
+    description: product.seoDesc ?? product.shortDescription ?? `Buy ${product.name} at Apex Archery.`,
+    openGraph: {
+      title: product.seoTitle ?? product.name,
+      description: product.seoDesc ?? product.shortDescription ?? undefined,
+      url: `/products/${slug}`,
+      siteName: "Apex Archery",
+      images: image ? [{ url: image.url, alt: image.altText ?? product.name }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.seoTitle ?? product.name,
+      description: product.seoDesc ?? product.shortDescription ?? undefined,
+      images: image ? [image.url] : undefined,
+    },
+    alternates: { canonical: `/products/${slug}` },
   };
 }
 
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await getProduct(slug);
-  if (!product) return { title: "Product Not Found" };
-  return {
-    title: product.name,
-    description: product.shortDescription || product.description || `${product.name} - Premium archery gear from Apex Archery`,
-  };
-}
 
-export default async function ProductDetailPage({ params }: ProductPageProps) {
-  const { slug } = await params;
-  const product = await getProduct(slug);
+  const [product] = await db
+    .select()
+    .from(productsTable)
+    .where(eq(productsTable.slug, slug))
+    .limit(1);
+
   if (!product) notFound();
 
-  const images = product.images.length > 0
-    ? product.images.map((i) => i.url)
-    : ["/images/product-bow-1.png"];
+  const [images, variants, specs, faqs, productCategories, tags, brand, reviewsData, reviewAgg] =
+    await Promise.all([
+      db.select().from(productImagesTable).where(eq(productImagesTable.productId, product.id)).orderBy(asc(productImagesTable.sortOrder)),
+      db.select().from(productVariantsTable).where(eq(productVariantsTable.productId, product.id)).orderBy(asc(productVariantsTable.sortOrder)),
+      db.select().from(productSpecsTable).where(eq(productSpecsTable.productId, product.id)).orderBy(asc(productSpecsTable.sortOrder)),
+      db.select().from(productFaqsTable).where(eq(productFaqsTable.productId, product.id)).orderBy(asc(productFaqsTable.sortOrder)),
+      db.select().from(productCategoriesTable).where(eq(productCategoriesTable.productId, product.id)),
+      db.select().from(productTagsTable).where(eq(productTagsTable.productId, product.id)),
+      product.brandId
+        ? db.select().from(brandsTable).where(eq(brandsTable.id, product.brandId)).limit(1).then((r) => r[0] ?? null)
+        : null,
+      db
+        .select()
+        .from(reviewsTable)
+        .where(and(eq(reviewsTable.productId, product.id), eq(reviewsTable.isApproved, true)))
+        .orderBy(desc(reviewsTable.createdAt))
+        .limit(20),
+      db
+        .select({
+          avg: sql<number>`coalesce(avg(${reviewsTable.rating}), 0)::numeric(3,2)`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(reviewsTable)
+        .where(and(eq(reviewsTable.productId, product.id), eq(reviewsTable.isApproved, true))),
+    ]);
+
+  const primaryCatRow = productCategories.find((pc) => pc.isPrimary) ?? productCategories[0];
+  const category = primaryCatRow
+    ? await db.select().from(categoriesTable).where(eq(categoriesTable.id, primaryCatRow.categoryId)).limit(1).then((r) => r[0] ?? null)
+    : null;
+
+  const avgRating = Number(reviewAgg[0]?.avg ?? 0);
+  const reviewCount = reviewAgg[0]?.count ?? 0;
+  const totalInventory = variants.reduce((sum, v) => sum + v.inventory, 0);
+
+  // Related products
+  const relatedProductIds = primaryCatRow
+    ? await db
+        .select({ productId: productCategoriesTable.productId })
+        .from(productCategoriesTable)
+        .where(
+          and(
+            eq(productCategoriesTable.categoryId, primaryCatRow.categoryId),
+            sql`${productCategoriesTable.productId} != ${product.id}`
+          )
+        )
+        .limit(8)
+    : [];
+
+  let relatedProducts: any[] = [];
+  if (relatedProductIds.length > 0) {
+    const rpIds = relatedProductIds.map((r) => r.productId);
+    const rProducts = await db
+      .select()
+      .from(productsTable)
+      .where(and(sql`${productsTable.id} IN ${rpIds}`, eq(productsTable.status, "ACTIVE")))
+      .limit(4);
+    const rImages = rpIds.length > 0
+      ? await db.select().from(productImagesTable).where(sql`${productImagesTable.productId} IN ${rpIds}`).orderBy(asc(productImagesTable.sortOrder))
+      : [];
+    const rImageMap = new Map<string, any[]>();
+    for (const img of rImages) {
+      if (!rImageMap.has(img.productId)) rImageMap.set(img.productId, []);
+      rImageMap.get(img.productId)!.push(img);
+    }
+    relatedProducts = rProducts.map((p) => ({
+      ...p,
+      images: rImageMap.get(p.id) ?? [],
+      brand: p.brandId && brand ? { id: brand.id, name: brand.name, slug: brand.slug } : null,
+    }));
+  }
+
+  // Bundle suggestions via shared tags
+  const productTags = tags.map((t) => t.tag);
+  let bundleProducts: any[] = [];
+  if (productTags.length > 0) {
+    const taggedProductIds = await db
+      .select({ productId: productTagsTable.productId })
+      .from(productTagsTable)
+      .where(
+        and(
+          sql`${productTagsTable.tag} IN ${productTags}`,
+          sql`${productTagsTable.productId} != ${product.id}`
+        )
+      )
+      .limit(4);
+
+    if (taggedProductIds.length > 0) {
+      const bpIds = taggedProductIds.map((t) => t.productId);
+      const bProducts = await db
+        .select()
+        .from(productsTable)
+        .where(and(sql`${productsTable.id} IN ${bpIds}`, eq(productsTable.status, "ACTIVE")))
+        .limit(4);
+      const bImages = await db
+        .select()
+        .from(productImagesTable)
+        .where(sql`${productImagesTable.productId} IN ${bpIds}`)
+        .orderBy(asc(productImagesTable.sortOrder));
+      const bImageMap = new Map<string, any[]>();
+      for (const img of bImages) {
+        if (!bImageMap.has(img.productId)) bImageMap.set(img.productId, []);
+        bImageMap.get(img.productId)!.push(img);
+      }
+      bundleProducts = bProducts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: p.price,
+        image: bImageMap.get(p.id)?.[0]?.url ?? "/images/product-bow-1.png",
+      }));
+    }
+  }
+
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://apexarchery.com";
+
+  const pdpProductSchema = productSchema(
+    {
+      name: product.name,
+      description: product.description,
+      shortDescription: product.shortDescription,
+      slug: product.slug,
+      sku: product.sku,
+      price: product.price,
+      brand: brand ? { name: brand.name } : null,
+      images: images.map((img) => img.url),
+      averageRating: avgRating,
+      reviewCount,
+    },
+    BASE_URL
+  );
+
+  const pdpBreadcrumbSchema = breadcrumbSchema(
+    [
+      { name: "Home", url: "/" },
+      ...(category ? [{ name: category.name, url: `/categories/${category.slug}` }] : []),
+      { name: product.name, url: `/products/${product.slug}` },
+    ],
+    BASE_URL
+  );
+
+  const schemas: Record<string, unknown>[] = [pdpProductSchema, pdpBreadcrumbSchema];
+  if (faqs.length > 0) {
+    schemas.push(faqSchema(faqs.map((f) => ({ question: f.question, answer: f.answer }))));
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12">
-      <div className="text-sm text-white/40 mb-8">
-        Home / {product.categories?.[0]?.name || "Products"} / <span className="text-foreground">{product.name}</span>
-      </div>
+    <div>
+      <SchemaOrg data={schemas} />
+      <ProductViewTracker
+        productId={product.id}
+        name={product.name}
+        price={String(product.price)}
+        category={category?.name}
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-24">
-        <div className="flex flex-col-reverse md:flex-row gap-4">
-          <div className="flex md:flex-col gap-4 overflow-x-auto md:w-24 shrink-0">
-            {images.map((url, idx) => (
-              <div
-                key={idx}
-                className="aspect-square rounded-lg overflow-hidden border-2 border-transparent shrink-0 w-20 md:w-full"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-          <div className="flex-1 bg-muted/30 rounded-3xl overflow-hidden aspect-[4/5] relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={images[0]}
-              alt={product.name}
-              className="absolute inset-0 w-full h-full object-contain"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col pt-4">
-          {product.brand && (
-            <p className="text-sm font-bold tracking-widest text-secondary-foreground uppercase mb-2">{product.brand.name}</p>
-          )}
-          <h1 className="font-display text-4xl md:text-5xl font-normal mb-4 leading-tight">{product.name}</h1>
-
-          <div className="flex items-center gap-4 mb-6">
-            <span className="text-3xl font-medium">${product.price}</span>
-            {product.compareAtPrice && (
-              <span className="text-xl text-muted-foreground line-through">${product.compareAtPrice}</span>
-            )}
-          </div>
-
-          {product.reviewCount > 0 && (
-            <p className="text-sm text-muted-foreground mb-4">
-              {product.avgRating} stars ({product.reviewCount} reviews)
-            </p>
-          )}
-
-          <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-            {product.shortDescription || product.description}
-          </p>
-
-          <AddToCartButton
-            productId={product.id}
-            productName={product.name}
-            variants={product.variants}
-            basePrice={product.price}
+      {/* Above the fold */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-10 lg:gap-16">
+          <ProductGallery
+            images={images.map((img) => ({
+              id: img.id,
+              url: img.url,
+              altText: img.altText,
+              isLifestyle: img.isLifestyle,
+            }))}
           />
-
-          <div className="grid grid-cols-2 gap-4 mt-8 p-6 bg-muted/50 rounded-2xl">
-            <div className="flex items-start gap-3">
-              <Truck className="w-5 h-5 text-primary mt-0.5" />
-              <div>
-                <h5 className="text-sm font-normal">Fast Shipping</h5>
-                <p className="text-xs text-muted-foreground">Ships within 24 hours</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-primary mt-0.5" />
-              <div>
-                <h5 className="text-sm font-normal">Authorized Dealer</h5>
-                <p className="text-xs text-muted-foreground">Full factory warranty</p>
-              </div>
-            </div>
-          </div>
+          <ProductInfo
+            product={{
+              id: product.id,
+              name: product.name,
+              slug: product.slug,
+              price: product.price,
+              compareAtPrice: product.compareAtPrice,
+              shortDescription: product.shortDescription,
+              images: images.map((img) => ({ url: img.url })),
+            }}
+            brand={brand ? { name: brand.name, slug: brand.slug } : null}
+            category={category ? { name: category.name, slug: category.slug } : null}
+            variants={variants.map((v) => ({
+              id: v.id,
+              name: v.name,
+              sku: v.sku,
+              price: v.price,
+              inventory: v.inventory,
+              isAvailable: v.isAvailable,
+              options: v.options,
+              imageUrl: v.imageUrl,
+            }))}
+            averageRating={avgRating}
+            reviewCount={reviewCount}
+            totalInventory={totalInventory}
+          />
         </div>
       </div>
 
-      {product.specs.length > 0 && (
-        <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="font-display text-2xl font-normal mb-6">Specifications</h2>
-          <div className="border rounded-2xl overflow-hidden divide-y">
-            {product.specs.map((spec) => (
-              <div key={spec.id} className="flex px-6 py-4">
-                <span className="w-1/3 font-medium text-muted-foreground">{spec.label}</span>
-                <span className="w-2/3">{spec.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Product Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ProductTabs
+          description={product.description}
+          specs={specs}
+          faqs={faqs}
+          reviews={reviewsData.map((r) => ({
+            id: r.id,
+            authorName: r.authorName,
+            rating: r.rating,
+            title: r.title,
+            body: r.body,
+            isVerified: r.isVerified,
+            createdAt: r.createdAt.toISOString(),
+          }))}
+          averageRating={avgRating}
+          reviewCount={reviewCount}
+          productId={product.id}
+        />
+      </div>
 
-      {product.description && (
-        <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="font-display text-2xl font-normal mb-6">Description</h2>
-          <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground">
-            <p>{product.description}</p>
-          </div>
-        </div>
-      )}
+      {/* Related Products */}
+      <RelatedProducts products={relatedProducts} />
 
-      {product.reviews.length > 0 && (
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-display text-2xl font-normal mb-2">Customer Reviews</h2>
-          <p className="text-muted-foreground mb-8">
-            {product.avgRating} out of 5 stars &middot; {product.reviewCount} {product.reviewCount === 1 ? "review" : "reviews"}
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {product.reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Bundle Builder */}
+      <BundleBuilder products={bundleProducts} />
     </div>
   );
 }

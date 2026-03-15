@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { db, ordersTable } from "@workspace/db";
 import { desc } from "drizzle-orm";
 import { format } from "date-fns";
@@ -39,7 +40,11 @@ export default async function AdminOrdersPage() {
             <tbody className="divide-y divide-border">
               {orders.map((order) => (
                 <tr key={order.id} className="hover:bg-muted/20">
-                  <td className="px-6 py-4 font-mono text-sm">{order.orderNumber}</td>
+                  <td className="px-6 py-4 font-mono text-sm">
+                    <Link href={`/admin/orders/${order.id}`} className="text-primary hover:underline">
+                      {order.orderNumber}
+                    </Link>
+                  </td>
                   <td className="px-6 py-4">
                     <div className="font-medium">{order.customerName}</div>
                     <div className="text-sm text-muted-foreground">{order.customerEmail}</div>

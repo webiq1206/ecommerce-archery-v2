@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and, asc, sql } from "drizzle-orm";
-import { db, productsTable, productImagesTable, productVariantsTable, productSpecsTable, productFaqsTable, productCategoriesTable, categoriesTable, brandsTable, reviewsTable } from "@workspace/db";
+import { db, productsTable, productImagesTable, productVariantsTable, productSpecsTable, productFaqsTable, productCategoriesTable, productTagsTable, categoriesTable, brandsTable, reviewsTable } from "@workspace/db";
 import { UpdateProductBody } from "@workspace/api-zod";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -40,7 +40,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const raw = await request.json();
-  const parsed = UpdateProductBody.safeParse(raw);
+  const parsed = UpdateProductBody.passthrough().safeParse(raw);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
 
   const data = parsed.data;
@@ -51,8 +51,78 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     price: data.price, compareAtPrice: data.compareAtPrice,
     brandId: data.brandId, distributorId: data.distributorId,
     isFeatured: data.isFeatured, isNewArrival: data.isNewArrival,
+    seoTitle: raw.seoTitle ?? undefined,
+    seoDesc: raw.seoDesc ?? undefined,
+    gtin: raw.gtin ?? undefined,
+    mpn: raw.mpn ?? undefined,
   }).where(eq(productsTable.id, id)).returning();
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
+
+  // Images
+  await db.delete(productImagesTable).where(eq(productImagesTable.productId, id));
+  if (raw.images?.length) {
+    await db.insert(productImagesTable).values(
+      raw.images.map((img: any) => ({ productId: id, url: img.url, sortOrder: img.sortOrder ?? 0 }))
+    );
+  }
+
+  // Specs
+  await db.delete(productSpecsTable).where(eq(productSpecsTable.productId, id));
+  if (raw.specs?.length) {
+    await db.insert(productSpecsTable).values(
+      raw.specs.map((s: any) => ({ productId: id, label: s.label, value: s.value, sortOrder: s.sortOrder ?? 0 }))
+    );
+  }
+
+  // FAQs
+  await db.delete(productFaqsTable).where(eq(productFaqsTable.productId, id));
+  if (raw.faqs?.length) {
+    await db.insert(productFaqsTable).values(
+      raw.faqs.map((f: any) => ({ productId: id, question: f.question, answer: f.answer, sortOrder: f.sortOrder ?? 0 }))
+    );
+  }
+
+  // Categories
+  await db.delete(productCategoriesTable).where(eq(productCategoriesTable.productId, id));
+  if (raw.categoryIds?.length) {
+    await db.insert(productCategoriesTable).values(
+      raw.categoryIds.map((catId: string) => ({
+        productId: id,
+        categoryId: catId,
+        isPrimary: catId === raw.primaryCategoryId,
+      }))
+    );
+  }
+
+  // Variants
+  await db.delete(productVariantsTable).where(eq(productVariantsTable.productId, id));
+  if (raw.variants?.length) {
+    await db.insert(productVariantsTable).values(
+      raw.variants.map((v: any) => ({
+        productId: id,
+        sku: v.sku,
+        name: v.name,
+        price: v.price || null,
+        inventory: v.inventory ?? 0,
+        isAvailable: v.isAvailable ?? true,
+        options: v.options,
+        sortOrder: v.sortOrder ?? 0,
+      }))
+    );
+  }
+
+  // Related products (stored as product tags with "related:" prefix)
+  if (raw.relatedProductIds) {
+    await db.delete(productTagsTable).where(
+      and(eq(productTagsTable.productId, id), sql`${productTagsTable.tag} LIKE 'related:%'`)
+    );
+    for (const relId of raw.relatedProductIds) {
+      if (relId) {
+        await db.insert(productTagsTable).values({ productId: id, tag: `related:${relId}` });
+      }
+    }
+  }
+
   return NextResponse.json(product);
 }
 

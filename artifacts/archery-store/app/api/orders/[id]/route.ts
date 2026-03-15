@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { db, ordersTable, orderItemsTable } from "@workspace/db";
+import { db, ordersTable, orderItemsTable, refundsTable } from "@workspace/db";
 import { UpdateOrderBody } from "@workspace/api-zod";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -12,8 +12,26 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   return NextResponse.json({
     ...order, createdAt: order.createdAt.toISOString(), updatedAt: order.updatedAt.toISOString(),
-    items: items.map((i) => ({ id: i.id, name: i.name, sku: i.sku, price: i.price, quantity: i.quantity })),
+    items: items.map((i) => ({ id: i.id, name: i.name, sku: i.sku, price: i.price, quantity: i.quantity, options: i.options })),
   });
+}
+
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const raw = await request.json();
+  if (raw?.action !== "refund") return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  const amount = String(raw.amount ?? "0");
+  const reason = raw.reason ?? null;
+
+  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, id));
+  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+
+  const [refund] = await db.insert(refundsTable).values({ orderId: id, amount, reason }).returning();
+  const refundAmount = parseFloat(amount);
+  const orderTotal = parseFloat(String(order.total));
+  const newStatus = refundAmount >= orderTotal ? "REFUNDED" : "PARTIALLY_REFUNDED";
+  await db.update(ordersTable).set({ status: newStatus }).where(eq(ordersTable.id, id));
+  return NextResponse.json({ refund, status: newStatus }, { status: 201 });
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

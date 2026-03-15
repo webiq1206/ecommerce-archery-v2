@@ -10,6 +10,12 @@ export async function GET(request: NextRequest) {
   const offset = (page - 1) * limit;
 
   const conditions: SQL[] = [];
+
+  const ids = sp.getAll("ids");
+  if (ids.length > 0) {
+    conditions.push(sql`${productsTable.id} IN ${ids}`);
+  }
+
   const status = sp.get("status");
   if (status) conditions.push(eq(productsTable.status, status as "DRAFT" | "ACTIVE" | "ARCHIVED"));
   else conditions.push(eq(productsTable.status, "ACTIVE"));
