@@ -5,9 +5,9 @@
   "type": "module",
   "packageManager": "pnpm@9.15.4",
   "scripts": {
-    "dev": "next dev -p ${PORT:-3000} -H 0.0.0.0",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
     "build": "next build",
-    "start": "next start -p ${PORT:-3000} -H 0.0.0.0",
+    "start": "next start -p 3000 -H 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "db:push": "drizzle-kit push --config ./drizzle.config.ts",
     "db:push-force": "drizzle-kit push --force --config ./drizzle.config.ts",

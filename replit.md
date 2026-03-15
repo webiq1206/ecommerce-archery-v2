@@ -64,6 +64,11 @@ Premium archery e-commerce platform ("Apex Archery") built with Next.js 15 App R
 └── .env.example
 ```
 
+## Replit Configuration
+
+- **Workflow**: "Start application" runs `pnpm run dev` on port 3000
+- **Port mapping**: localPort 3000 → externalPort 80
+
 ## Scripts
 
 - `pnpm dev` — Start dev server
