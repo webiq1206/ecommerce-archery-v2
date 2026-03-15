@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "postgresql-16"]
+modules = ["nodejs-20", "postgresql-16"]
 
 run = "pnpm run dev"
 
@@ -22,4 +22,4 @@ command = "pnpm run dev"
 waitForPort = 3000
 
 [nix]
-channel = "stable-25_05"
+channel = "stable-24_05"
