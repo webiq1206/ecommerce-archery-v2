@@ -10,8 +10,8 @@ channel = "stable-24_11"
 NEXT_TELEMETRY_DISABLED = "1"
 
 [deployment]
-build = ["bash", "-c", "pnpm install && pnpm run build"]
-run = ["bash", "-c", "pnpm run start"]
+build = ["bash", "-c", "pnpm install && node_modules/.bin/next build"]
+run = ["node_modules/.bin/next", "start", "-p", "3000", "-H", "0.0.0.0"]
 deploymentTarget = "autoscale"
 
 [[ports]]
