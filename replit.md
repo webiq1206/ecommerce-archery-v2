@@ -6,7 +6,7 @@ Premium archery e-commerce platform ("Apex Archery") built with Next.js 15 App R
 
 ## Stack
 
-- **Node.js version**: 24
+- **Node.js version**: 22
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
 - **Framework**: Next.js 15 (App Router with Server Components)

@@ -1,25 +1,19 @@
-modules = ["nodejs-20", "postgresql-16"]
-
+entrypoint = "app/page.tsx"
 run = "pnpm run dev"
-
-[deployment]
-run = ["pnpm", "run", "start"]
-build = ["pnpm", "run", "build"]
-deploymentTarget = "autoscale"
-
-[workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-[workflows.workflow.tasks.args]
-command = "pnpm run dev"
-waitForPort = 3000
+hidden = [".config", ".next", "node_modules"]
+modules = ["nodejs-22"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-24_11"
+
+[env]
+NEXT_TELEMETRY_DISABLED = "1"
+
+[deployment]
+build = ["sh", "-c", "pnpm install --frozen-lockfile && pnpm run build"]
+run = ["pnpm", "run", "start"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
