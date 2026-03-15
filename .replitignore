@@ -1,5 +1,5 @@
 .local
 .cache
-.next
 node_modules
 attached_assets
+.next/cache

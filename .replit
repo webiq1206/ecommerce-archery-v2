@@ -10,7 +10,7 @@ channel = "stable-24_11"
 NEXT_TELEMETRY_DISABLED = "1"
 
 [deployment]
-build = ["pnpm", "deploy:build"]
+build = ["pnpm", "run", "deploy:build"]
 run = ["node", ".next/standalone/server.js"]
 deploymentTarget = "autoscale"
 
