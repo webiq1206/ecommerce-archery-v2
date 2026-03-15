@@ -10,9 +10,9 @@ channel = "stable-24_11"
 NEXT_TELEMETRY_DISABLED = "1"
 
 [deployment]
-build = ["sh", "-c", "pnpm install --frozen-lockfile && pnpm run build"]
+build = ["bash", "-c", "pnpm install --frozen-lockfile && pnpm run build"]
 run = ["pnpm", "run", "start"]
-deploymentTarget = "cloudrun"
+deploymentTarget = "autoscale"
 
 [[ports]]
 localPort = 3000
