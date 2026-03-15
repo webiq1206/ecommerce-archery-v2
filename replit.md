@@ -107,4 +107,4 @@ Premium archery e-commerce platform ("Apex Archery") built with Next.js 15 App R
 - Path alias: `@/*` maps to project root
 - Zod: `drizzle-zod@0.8.3` uses `zod/v4` internally; schema files in `lib/db/schema/` import from `zod/v4`
 - Build: `pnpm typecheck` and `pnpm build` pass cleanly with zero type errors (no `ignoreBuildErrors` workaround)
-- Deployment: autoscale target; build=`["pnpm", "deploy:build"]`, run=`["pnpm", "start"]`. IMPORTANT: use `pnpm <script>` (without `run`) — `pnpm run <script>` shows help text in the deployment container
+- Deployment: autoscale target using Next.js standalone output mode. Build=`["pnpm", "deploy:build"]` (installs deps, builds, copies static assets), Run=`["node", ".next/standalone/server.js"]`. The standalone server reads PORT and HOSTNAME from env vars. The run environment has NO `node_modules` — standalone mode bundles everything needed.

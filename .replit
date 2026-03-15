@@ -11,7 +11,7 @@ NEXT_TELEMETRY_DISABLED = "1"
 
 [deployment]
 build = ["pnpm", "deploy:build"]
-run = ["pnpm", "start"]
+run = ["node", ".next/standalone/server.js"]
 deploymentTarget = "autoscale"
 
 [[ports]]
@@ -50,3 +50,7 @@ waitForPort = 3000
 [userenv.development]
 NEXTAUTH_URL = "https://d0de3c54-8e87-4778-9b40-d55b2afeaae8-00-sexhrbu9coxo.spock.replit.dev"
 NEXT_PUBLIC_BASE_URL = "https://d0de3c54-8e87-4778-9b40-d55b2afeaae8-00-sexhrbu9coxo.spock.replit.dev"
+
+[userenv.shared]
+PORT = "3000"
+HOSTNAME = "0.0.0.0"
