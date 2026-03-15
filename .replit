@@ -44,3 +44,9 @@ outputType = "webview"
 task = "shell.exec"
 args = "pnpm run dev"
 waitForPort = 3000
+
+[userenv]
+
+[userenv.development]
+NEXTAUTH_URL = "https://d0de3c54-8e87-4778-9b40-d55b2afeaae8-00-sexhrbu9coxo.spock.replit.dev"
+NEXT_PUBLIC_BASE_URL = "https://d0de3c54-8e87-4778-9b40-d55b2afeaae8-00-sexhrbu9coxo.spock.replit.dev"

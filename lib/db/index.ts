@@ -19,7 +19,7 @@ function getPool() {
   return _pool;
 }
 
-function getDb() {
+export function getDb() {
   if (!_db) {
     _db = drizzle(getPool(), { schema });
   }

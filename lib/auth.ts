@@ -2,11 +2,11 @@ import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { db, usersTable } from "@/lib/db";
+import { db, getDb, usersTable } from "@/lib/db";
 import { eq } from "drizzle-orm";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: DrizzleAdapter(db),
+  adapter: DrizzleAdapter(getDb()),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/signin",
