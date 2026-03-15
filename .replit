@@ -10,8 +10,8 @@ channel = "stable-24_11"
 NEXT_TELEMETRY_DISABLED = "1"
 
 [deployment]
-build = ["bash", "build.sh"]
-run = ["npx", "next", "start", "-p", "3000", "-H", "0.0.0.0"]
+build = ["sh", "-c", "npm install --legacy-peer-deps && npx next build"]
+run = ["sh", "-c", "npx next start -p 3000 -H 0.0.0.0"]
 deploymentTarget = "autoscale"
 
 [[ports]]
