@@ -77,6 +77,7 @@ Premium archery e-commerce platform ("Apex Archery") built with Next.js 15 App R
 - `pnpm db:push` — Push Drizzle schema to database
 - `pnpm seed` — Seed database with sample data
 - `pnpm typecheck` — TypeScript type checking
+- `pnpm deploy:build` — Install deps + production build (used by deployment)
 
 ## Design
 
@@ -106,4 +107,4 @@ Premium archery e-commerce platform ("Apex Archery") built with Next.js 15 App R
 - Path alias: `@/*` maps to project root
 - Zod: `drizzle-zod@0.8.3` uses `zod/v4` internally; schema files in `lib/db/schema/` import from `zod/v4`
 - Build: `pnpm typecheck` and `pnpm build` pass cleanly with zero type errors (no `ignoreBuildErrors` workaround)
-- Deployment: autoscale target; build command uses `node_modules/.bin/next build`, run uses `node_modules/.bin/next start -p 3000 -H 0.0.0.0`
+- Deployment: autoscale target; build=`["pnpm", "deploy:build"]`, run=`["pnpm", "start"]`. IMPORTANT: use `pnpm <script>` (without `run`) — `pnpm run <script>` shows help text in the deployment container
