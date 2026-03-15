@@ -29,6 +29,6 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const [addr] = await db.insert(addressesTable).values(parsed.data).returning();
+  const [addr] = await db.insert(addressesTable).values(parsed.data as unknown as typeof addressesTable.$inferInsert).returning();
   return NextResponse.json(addr);
 }

@@ -23,7 +23,7 @@ interface CartState {
   toggleDrawer: () => void;
   openDrawer: () => void;
   closeDrawer: () => void;
-  addItem: (item: Omit<CartItemData, "quantity"> & { quantity?: number }) => void;
+  addItem: (item: Omit<CartItemData, "quantity" | "id"> & { id?: string; quantity?: number }) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -155,7 +155,7 @@ export const useCartStore = create<CartState>()(
         items: state.items,
         sessionId: state.sessionId,
       }),
-      onRehydrate: () => {
+      onRehydrateStorage: () => {
         return (state) => {
           if (!state) return;
           if (!state.sessionId) {

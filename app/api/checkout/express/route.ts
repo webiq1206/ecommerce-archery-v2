@@ -45,16 +45,24 @@ export async function POST(request: NextRequest) {
 
     const productMap = new Map(products.map((p) => [p.id, p]));
 
+    const missingProducts = cartItems.filter((ci) => !productMap.has(ci.productId));
+    if (missingProducts.length > 0) {
+      return NextResponse.json(
+        { error: "Some products in your cart are no longer available" },
+        { status: 400 }
+      );
+    }
+
     let subtotal = 0;
     const resolvedItems = cartItems.map((ci) => {
-      const product = productMap.get(ci.productId);
-      const price = Number(product?.price ?? ci.price ?? 0);
+      const product = productMap.get(ci.productId)!;
+      const price = Number(product.price);
       subtotal += price * ci.quantity;
       return {
         productId: ci.productId,
         variantId: ci.variantId,
-        name: product?.name ?? "Product",
-        sku: product?.sku ?? "",
+        name: product.name,
+        sku: product.sku ?? "",
         price,
         quantity: ci.quantity,
       };

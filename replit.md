@@ -104,3 +104,6 @@ Premium archery e-commerce platform ("Apex Archery") built with Next.js 15 App R
 - Tailwind v4: uses `@import "tailwindcss"` + `@tailwindcss/postcss` plugin
 - `serverExternalPackages: ["pg"]` in next.config.ts
 - Path alias: `@/*` maps to project root
+- Zod: `drizzle-zod@0.8.3` uses `zod/v4` internally; schema files in `lib/db/schema/` import from `zod/v4`
+- Build: `pnpm typecheck` and `pnpm build` pass cleanly with zero type errors (no `ignoreBuildErrors` workaround)
+- Deployment: autoscale target; build command uses `node_modules/.bin/next build`, run uses `node_modules/.bin/next start -p 3000 -H 0.0.0.0`

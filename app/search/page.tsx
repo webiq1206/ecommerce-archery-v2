@@ -78,13 +78,13 @@ async function searchProducts(
       : [],
   ]);
 
-  const imageMap = new Map<string, any[]>();
+  const imageMap = new Map<string, (typeof images)[number][]>();
   for (const img of images) {
     if (!imageMap.has(img.productId)) imageMap.set(img.productId, []);
     imageMap.get(img.productId)!.push(img);
   }
-  const brandMap = new Map(brands.map((b) => [b.id, b]));
-  const reviewMap = new Map(reviews.map((r) => [r.productId, r.count]));
+  const brandMap = new Map(brands.map((b) => [b.id, b] as const));
+  const reviewMap = new Map(reviews.map((r) => [r.productId, r.count] as const));
 
   return {
     products: products.map((p) => ({

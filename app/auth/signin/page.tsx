@@ -24,11 +24,16 @@ function SignInForm() {
       email,
       password,
       callbackUrl,
-      redirect: true,
+      redirect: false,
     });
     if (res?.error) {
       setError("Invalid email or password");
+      setLoading(false);
+      return;
     }
+    const redirectTo = res?.url ?? callbackUrl;
+    const isSameOrigin = redirectTo.startsWith("/") || redirectTo.startsWith(window.location.origin);
+    window.location.href = isSameOrigin ? redirectTo : "/account";
     setLoading(false);
   };
 

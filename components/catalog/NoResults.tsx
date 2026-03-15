@@ -41,12 +41,12 @@ async function getFeaturedProducts() {
     })(),
   ]);
 
-  const imageMap = new Map<string, any[]>();
+  const imageMap = new Map<string, (typeof images)[number][]>();
   for (const img of images) {
     if (!imageMap.has(img.productId)) imageMap.set(img.productId, []);
     imageMap.get(img.productId)!.push(img);
   }
-  const brandMap = new Map(brands.map((b) => [b.id, b]));
+  const brandMap = new Map(brands.map((b) => [b.id, b] as const));
 
   return products.map((p) => ({
     id: p.id,
