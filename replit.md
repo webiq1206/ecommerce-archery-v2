@@ -77,7 +77,8 @@ Premium archery e-commerce platform ("Apex Archery") built with Next.js 15 App R
 - `pnpm db:push` — Push Drizzle schema to database
 - `pnpm seed` — Seed database with sample data
 - `pnpm typecheck` — TypeScript type checking
-- `pnpm deploy:build` — Install deps + production build (used by deployment)
+- `pnpm deploy:build` — Install deps + production build + copy static assets (used by deployment build phase)
+- `pnpm deploy:start` — Start standalone production server locally (deployment run phase uses `node .next/standalone/server.js` directly since node_modules aren't available)
 
 ## Design
 
