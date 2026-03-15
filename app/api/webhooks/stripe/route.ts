@@ -87,7 +87,6 @@ export async function POST(req: NextRequest) {
         }
 
         // Send order confirmation email
-        const productIds = items.map((i) => i.productId);
         const itemImages = productIds.length > 0
           ? await db
               .select({ productId: productImagesTable.productId, url: productImagesTable.url })
