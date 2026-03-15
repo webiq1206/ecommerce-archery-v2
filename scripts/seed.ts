@@ -1,5 +1,5 @@
-import { db } from "@workspace/db";
-import { categoriesTable, brandsTable, collectionsTable, distributorsTable, productsTable, productImagesTable, productVariantsTable, productSpecsTable, productCategoriesTable, productCollectionsTable, reviewsTable } from "@workspace/db";
+import { db } from "../lib/db";
+import { categoriesTable, brandsTable, collectionsTable, distributorsTable, productsTable, productImagesTable, productVariantsTable, productSpecsTable, productCategoriesTable, productCollectionsTable, reviewsTable } from "../lib/db";
 
 async function seed() {
   console.log("Seeding database...");

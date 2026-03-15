@@ -1,29 +1,25 @@
 modules = ["nodejs-24", "postgresql-16"]
 
-[[artifacts]]
-id = "artifacts/api-server"
-
-[[artifacts]]
-id = "artifacts/mockup-sandbox"
+run = "pnpm run dev"
 
 [deployment]
-router = "application"
+run = ["pnpm", "run", "start"]
+build = ["pnpm", "run", "build"]
 deploymentTarget = "autoscale"
-
-[deployment.postBuild]
-args = ["pnpm", "store", "prune"]
-env = { "CI" = "true" }
 
 [workflows]
 runButton = "Project"
 
-[agent]
-stack = "PNPM_WORKSPACE"
-expertMode = true
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
 
-[postMerge]
-path = "scripts/post-merge.sh"
-timeoutMs = 20000
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+[workflows.workflow.tasks.args]
+command = "pnpm run dev"
+waitForPort = 3000
 
 [nix]
 channel = "stable-25_05"
